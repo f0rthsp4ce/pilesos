@@ -62,7 +62,6 @@ class WheelsController:
         gpio.set_PWM_frequency(user_gpio=RightWheel.PHASE, frequency=1000)
 
     def set_speed(self, wheel: Union[Literal["L"], Literal["R"]], speed: int) -> None:
-        logger.debug("wheel=%s speed=%s" % (wheel, speed))
         """
         Set speed and direction of the wheel.
 
@@ -74,6 +73,7 @@ class WheelsController:
             set_speed("L", 23)
             set_speed("R", -92)
         """
+        logger.debug("wheel=%s speed=%s" % (wheel, speed))
         w = LeftWheel if wheel == "L" else RightWheel
 
         gpio.set_PWM_dutycycle(
