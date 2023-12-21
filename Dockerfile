@@ -2,7 +2,6 @@ FROM python:3.12-slim
 
 COPY pilesos /app/pilesos
 ADD requirements.txt /app
-ADD uvicorn-logging.yml /app
 
 WORKDIR /app
 RUN --mount=type=cache,target=/root/.cache/pip \
