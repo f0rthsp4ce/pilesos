@@ -9,36 +9,84 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="" />
   <style>
+    #camera {
+      width: fit-content;
+      height: fit-content;
+    }
   </style>
 </head>
 
 <body>
+  <img id="camera" src="">
   <form id="controls" onmousemove="sendInput();">
-    <input name="wheels_left_speed" type="range" min="-100" max="100" value="0"
-      onmouseup="this.value = 0; sendInput();">
-    <input name="wheels_right_speed" type="range" min="-100" max="100" value="0"
-      onmouseup="this.value = 0; sendInput();">
+
   </form>
 
+
+  <script src="/static/joystick-controller.min.js"></script>
   <script>
+    // set camera url
+    document.getElementById("camera").src = `http://${window.location.host}:8001/stream`;
+  </script>
 
+  <script>
+    // connect to websocket
     var ws = new WebSocket(`ws://${window.location.host}/input`);
-
+    // print received websocket messages to console
     ws.onmessage = function (event) {
       console.info(event.data)
     };
 
+    var joystick_state;
+    var last_sent_state = ""; // traffic save
     function sendInput() {
-      var inputs_array = {}
+      if (ws.CONNECTING) {
+        return;
+      }
+      // to be sent to server
+      var inputs_state = {}
 
-      const inputs = document.querySelectorAll("#controls > input");
-      inputs.forEach((input) => {
-        inputs_array[input.name] = input.value;
+      // populate with buttons, sliders, etc
+      document.querySelectorAll("#controls > input").forEach((input) => {
+        inputs_state[input.name] = input.value;
       });
 
-      console.info(inputs_array)
-      ws.send(JSON.stringify(inputs_array))
+      // populate with joystick data
+      inputs_state["wheels_joystick"] = joystick_state;
+      // send inputs
+      if (inputs_state != last_sent_state) {
+        var json = JSON.stringify(inputs_state);
+        ws.send(json);
+        last_sent_state = inputs_state;
+        console.info(json)
+      }
     }
+
+    // create joystick
+    JoystickController = JoystickController.default
+    const staticJoystick = new JoystickController(
+      {
+        maxRange: 100,
+        level: 10,
+        radius: 50,
+        joystickRadius: 20,
+        opacity: 0.5,
+        leftToRight: false,
+        bottomToUp: true,
+        containerClass: "joystick-container",
+        controllerClass: "joystick-controller",
+        joystickClass: "joystick",
+        distortion: true,
+        x: "20%",
+        y: "35%",
+        mouseClickButton: "ALL",
+        hideContextMenu: true,
+      },
+      (s) => {
+        joystick_state = s;
+        sendInput();
+      }
+    );
   </script>
 
 </body>

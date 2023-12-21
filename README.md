@@ -16,6 +16,7 @@ most images are alpine based.
 - cockpit
     - [fastapi](https://fastapi.tiangolo.com/) — web server for HTML and REST API
     - [fastapi websockets](https://fastapi.tiangolo.com/advanced/websockets/) — realtime input sending
+    - [joystick controller](https://github.com/cyrus2281/joystick-controller) — vanilla js joystick
 - [ustreamer](https://github.com/pikvm/ustreamer) — fast webcam streaming
 - [pigpiod](https://abyz.me.uk/rpi/pigpio/python.html) — gpio daemon to control several independent PWM generators
 
