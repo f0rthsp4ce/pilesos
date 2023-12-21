@@ -1,0 +1,20 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+fastapi = "*"
+websockets = "*"
+uvicorn = "*"
+pyyaml = "*"
+jinja2 = "*"
+pigpio = "*"
+
+[dev-packages]
+black = "*"
+mypy = "*"
+isort = "*"
+
+[requires]
+python_version = "3.11"

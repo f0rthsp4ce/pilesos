@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>PiLesos</title>
+  <meta name="description" content="" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="" />
+  <style>
+  </style>
+</head>
+
+<body>
+  <form id="controls" onmousemove="sendInput();">
+    <input name="wheels_left_speed" type="range" min="-100" max="100" value="0"
+      onmouseup="this.value = 0; sendInput();">
+  </form>
+
+  <script>
+
+    var ws = new WebSocket(`ws://${window.location.host}/input`);
+
+    ws.onmessage = function (event) {
+      console.info(event.data)
+    };
+
+    function sendInput() {
+      var inputs_array = {}
+
+      const inputs = document.querySelectorAll("#controls > input");
+      inputs.forEach((input) => {
+        inputs_array[input.name] = input.value;
+      });
+
+      console.info(inputs_array)
+      ws.send(JSON.stringify(inputs_array))
+    }
+  </script>
+
+</body>
+
+</html>
