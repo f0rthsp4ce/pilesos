@@ -1,8 +1,9 @@
 """
 Public GPIO interface. Usable from any module, simultaneously.
 """
-import pigpio
 from logging import getLogger
+
+import pigpio
 
 logger = getLogger(__name__)
 
