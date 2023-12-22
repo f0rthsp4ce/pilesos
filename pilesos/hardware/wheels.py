@@ -28,8 +28,7 @@ class RightWheel:
 
 
 def value_map(value: int, l_min: int, l_max: int, r_min: int, r_max: int) -> int:
-    """
-    Map one value range to another.
+    """Map one value range to another.
 
     Example:
         # 0..255 -> -10..10
@@ -42,28 +41,18 @@ def value_map(value: int, l_min: int, l_max: int, r_min: int, r_max: int) -> int
 
 
 class WheelsController:
-    """
-    Class for controlling all wheels of the vehicle.
-    """
+    """Class for controlling all wheels of the vehicle."""
 
     def __init__(self) -> None:
-        """
-        Initialize all pins.
-        """
-        for pin in (
-            LeftWheel.EN,
-            LeftWheel.PHASE,
-            RightWheel.EN,
-            RightWheel.PHASE,
-        ):
+        """Initialize all pins."""
+        for pin in (LeftWheel.EN, LeftWheel.PHASE, RightWheel.EN, RightWheel.PHASE):
             gpio.set_mode(pin, mode=pigpio.OUTPUT)
             gpio.write(pin, pigpio.LOW)
         gpio.set_PWM_frequency(user_gpio=LeftWheel.PHASE, frequency=1000)
         gpio.set_PWM_frequency(user_gpio=RightWheel.PHASE, frequency=1000)
 
     def set_speed(self, wheel: Union[Literal["L"], Literal["R"]], speed: int) -> None:
-        """
-        Set speed and direction of the wheel.
+        """Set speed and direction of the wheel.
 
         Args:
             wheel: 'L' or 'R'
@@ -75,13 +64,11 @@ class WheelsController:
         """
         logger.debug("wheel=%s speed=%s" % (wheel, speed))
         w = LeftWheel if wheel == "L" else RightWheel
-
         gpio.set_PWM_dutycycle(
             user_gpio=w.PHASE,
             # map -100..100 to 1..255 where 128 = 50% duty cycle = stop.
             dutycycle=value_map(speed, -100, 100, 3, 254),
         )
-
         if speed == 0:
             # power off if stopped
             gpio.write(w.EN, pigpio.LOW)

@@ -3,7 +3,7 @@ from logging import getLogger
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
-from pilesos.input.websocket import WebsocketInput, process_websocket_input
+from pilesos.cockpit.input.websocket import WebsocketInput, process_websocket_input
 
 logger = getLogger(__name__)
 router = APIRouter()

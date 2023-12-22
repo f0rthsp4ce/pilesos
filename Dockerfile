@@ -7,5 +7,5 @@ WORKDIR /app
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install -r requirements.txt
 
-CMD exec uvicorn --host 0.0.0.0 pilesos.server:fastapi_app --port 8000 --log-config pilesos/uvicorn-logging.yml --reload
+CMD exec uvicorn --host 0.0.0.0 pilesos.cockpit.server:fastapi_app --port 8000 --log-config pilesos/cockpit/uvicorn-logging.yml --reload
 EXPOSE 8000
