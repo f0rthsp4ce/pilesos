@@ -18,13 +18,13 @@ logger = getLogger(__name__)
 # pin configuration
 class LeftWheel:
     EN = 5
-    PHASE = 12
+    PHASE = 13
 
 
 # pin configuration
 class RightWheel:
-    EN = 6
-    PHASE = 13
+    EN = 26
+    PHASE = 16
 
 
 def value_map(value: int, l_min: int, l_max: int, r_min: int, r_max: int) -> int:
@@ -64,10 +64,13 @@ class WheelsController:
         """
         logger.debug("wheel=%s speed=%s" % (wheel, speed))
         w = LeftWheel if wheel == "L" else RightWheel
+        if w == LeftWheel:
+            # one driver is connected backwards
+            speed = -speed
         gpio.set_PWM_dutycycle(
             user_gpio=w.PHASE,
-            # map -100..100 to 1..255 where 128 = 50% duty cycle = stop.
-            dutycycle=value_map(speed, -100, 100, 3, 254),
+            # map -100..100 to 1..255 (minus some edges) where 128 = 50% duty cycle = stop.
+            dutycycle=value_map(speed, -100, 100, 3, 253),
         )
         if speed == 0:
             # power off if stopped

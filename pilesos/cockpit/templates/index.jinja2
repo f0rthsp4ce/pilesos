@@ -1,92 +1,139 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>PiLesos</title>
-  <meta name="description" content="" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Robot Control</title>
+  <!-- Include NippleJS -->
+  <script src="/static/nipplejs.js"></script>
+
   <style>
-    #camera {
-      width: fit-content;
-      height: fit-content;
+    html {
+      background-color: black;
+      color: white;
     }
   </style>
 </head>
 
 <body>
-  <img id="camera" src="">
-  <form id="controls" onmousemove="sendInput();">
 
-  </form>
+  <div>
+    <img id="cameraStream" src="#" alt="Camera Stream" style="max-width: 100%; height: auto;">
+  </div>
 
+  <div>
+    <div>
+      <h3>Battery Charge: <span id="batteryIndicator">100%</span></h3>
+    </div>
 
-  <script src="/static/joystick-controller.min.js"></script>
+    <div>
+      <label>Joystick:</label>
+      <div id="joystickContainer"></div>
+    </div>
+
+    <div>
+      <label>Buzzer:</label>
+      <button id="buzzerButton">Toggle Buzzer</button>
+    </div>
+
+    <div>
+      <label>Lights:</label>
+      <input type="checkbox" id="lightsSwitch"><label for="lightsSwitch">Toggle Lights</label>
+    </div>
+  </div>
+
   <script>
-    // set camera url
-    document.getElementById("camera").src = `http://${window.location.host}:8001/stream`;
-  </script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const joystickContainer = document.getElementById('joystickContainer');
+      const buzzerButton = document.getElementById('buzzerButton');
+      const lightsSwitch = document.getElementById('lightsSwitch');
+      const batteryIndicator = document.getElementById('batteryIndicator');
 
-  <script>
-    // connect to websocket
-    var ws = new WebSocket(`ws://${window.location.host}/input`);
-    // print received websocket messages to console
-    ws.onmessage = function (event) {
-      console.info(event.data)
-    };
-
-    var joystick_state;
-    var last_sent_state = ""; // traffic save
-    function sendInput() {
-      if (ws.CONNECTING) {
-        return;
-      }
-      // to be sent to server
-      var inputs_state = {}
-
-      // populate with buttons, sliders, etc
-      document.querySelectorAll("#controls > input").forEach((input) => {
-        inputs_state[input.name] = input.value;
+      // Initialize NippleJS
+      const joystick = nipplejs.create({
+        zone: joystickContainer,
+        mode: 'static',
+        position: { left: '50%', top: '50%' },
+        color: 'blue',
+        restJoystick: true,
       });
 
-      // populate with joystick data
-      inputs_state["wheels_joystick"] = joystick_state;
-      // send inputs
-      if (inputs_state != last_sent_state) {
-        var json = JSON.stringify(inputs_state);
-        ws.send(json);
-        last_sent_state = inputs_state;
-        console.info(json)
-      }
-    }
+      // Connect to the WebSocket server
+      const socket = new WebSocket(`ws://${window.location.host}/input`);
 
-    // create joystick
-    JoystickController = JoystickController.default
-    const staticJoystick = new JoystickController(
-      {
-        maxRange: 100,
-        level: 10,
-        radius: 50,
-        joystickRadius: 20,
-        opacity: 0.5,
-        leftToRight: false,
-        bottomToUp: true,
-        containerClass: "joystick-container",
-        controllerClass: "joystick-controller",
-        joystickClass: "joystick",
-        distortion: true,
-        x: "20%",
-        y: "35%",
-        mouseClickButton: "ALL",
-        hideContextMenu: true,
-      },
-      (s) => {
-        joystick_state = s;
-        sendInput();
+      // Event listener for joystick movement
+      joystick.on('move', function () {
+        sendState();
+      });
+
+      // Event listener for joystick release
+      joystick.on('end', function () {
+        // Send joystick coordinates as { x: 0, y: 0 } when released
+        sendState({ joystick: { x: 0, y: 0 } });
+      });
+
+      // Event listener for touch or mouse button press
+      function handleButtonPress() {
+        buzzerButton.classList.add('active');
+        sendState();
       }
-    );
+
+      // Event listener for touch or mouse button release
+      function handleButtonRelease() {
+        buzzerButton.classList.remove('active');
+        sendState();
+      }
+
+      buzzerButton.addEventListener('mousedown', handleButtonPress);
+      buzzerButton.addEventListener('touchstart', handleButtonPress);
+
+      buzzerButton.addEventListener('mouseup', handleButtonRelease);
+      buzzerButton.addEventListener('touchend', handleButtonRelease);
+
+      // Event listener for lights switch
+      lightsSwitch.addEventListener('change', function () {
+        sendState();
+      });
+
+      // Function to send the whole state to the server
+      function sendState(state = {}) {
+        const defaultState = {
+          joystick: joystick[0].frontPosition,
+          switches: {
+            lights: lightsSwitch.checked,
+          },
+          buttons: {
+            buzzer: buzzerButton.classList.contains('active'),
+          }
+        };
+        const finalState = { ...defaultState, ...state };
+        const payload = JSON.stringify(finalState);
+        console.info("sent: ", payload);
+
+        socket.send(payload);
+      }
+      // Event listener for receiving data from the server
+      socket.addEventListener('message', function (event) {
+        console.info("recv: ", event.data);
+        const data = JSON.parse(event.data);
+
+        // Update UI based on server response
+        batteryIndicator.textContent = `${data.battery_percentage}%`;
+
+        // Add more conditions for other controls
+      });
+
+      // Error handling for the WebSocket connection
+      socket.addEventListener('error', function (event) {
+        console.error('WebSocket error:', event);
+      });
+
+      // Close WebSocket connection on page unload
+      window.addEventListener('unload', function () {
+        socket.close();
+      });
+    });
   </script>
 
 </body>

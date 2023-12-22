@@ -10,7 +10,7 @@ logger = getLogger(__name__)
 gpio: pigpio.pi
 
 # connect to pigpiod daemon
-gpio = pigpio.pi(host="pigpiod", port=8888, show_errors=False)
+gpio = pigpio.pi(host="pigpiod", port=8888)
 if not gpio.connected:
     # if pigpiod daemon is unavailable, create a virtual mock interface
     logger.warning("USING MOCKED GPIO. NO REAL PINS ARE USED.")
