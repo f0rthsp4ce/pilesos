@@ -3,15 +3,81 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>Robot Control</title>
   <!-- Include NippleJS -->
   <script src="/static/nipplejs.js"></script>
 
   <style>
+    /* colors */
+    :root {
+      --bg: black;
+      --accent: lawngreen;
+      --text: white;
+    }
+
     html {
-      background-color: black;
-      color: white;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: large;
+    }
+
+    button,
+    input,
+    label.checkbox-button {
+      min-height: 2rem;
+      min-width: 2rem;
+      font-size: large;
+      color: var(--accent);
+      background-color: var(--bg);
+      border: 2px solid var(--accent);
+      padding: 1rem;
+    }
+
+    button:active {
+      color: var(--bg);
+      background-color: var(--accent);
+    }
+
+    /* checkbox buttons */
+    input[type="checkbox"] {
+      display: none;
+    }
+
+    label.checkbox-button {
+      background-color: var(--bg);
+      color: var(--accent);
+      cursor: pointer;
+    }
+
+    /* Change button color when checkbox is checked */
+    input[type="checkbox"]:checked+label.checkbox-button {
+      background-color: var(--accent);
+      color: var(--bg);
+    }
+
+    /* prevent mobile browsers from selecting text when using joystick and controls */
+    html {
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    *:not(#joystickController) {
+      touch-action: manipulation;
+
+    }
+
+    /* controls placement */
+    #camera {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .control {
+      margin: 2rem;
+      box-sizing: border-box;
     }
   </style>
 </head>
@@ -19,32 +85,33 @@
 <body>
 
   <div>
-    <img id="cameraStream" src="#" alt="Camera Stream" style="max-width: 100%; height: auto;">
+    <img id="camera" src="#" alt="Camera">
   </div>
+
 
   <div>
     <div>
       <h3>Battery Charge: <span id="batteryIndicator">100%</span></h3>
     </div>
 
-    <div>
-      <label>Joystick:</label>
-      <div id="joystickContainer"></div>
+    <div class="control">
+      <button id="buzzerButton">Buzzer</button>
     </div>
 
-    <div>
-      <label>Buzzer:</label>
-      <button id="buzzerButton">Toggle Buzzer</button>
-    </div>
-
-    <div>
-      <label>Lights:</label>
-      <input type="checkbox" id="lightsSwitch"><label for="lightsSwitch">Toggle Lights</label>
+    <div class="control">
+      <input type="checkbox" id="lightsSwitch">
+      <label for="lightsSwitch" class="checkbox-button">Lights</label>
     </div>
   </div>
 
+  <div id="joystickContainer"></div>
+
+
   <script>
     document.addEventListener('DOMContentLoaded', function () {
+      // set camera stream url
+      document.getElementById("camera").src = `http://${window.location.host}:8001/stream`
+
       const joystickContainer = document.getElementById('joystickContainer');
       const buzzerButton = document.getElementById('buzzerButton');
       const lightsSwitch = document.getElementById('lightsSwitch');
@@ -54,8 +121,8 @@
       const joystick = nipplejs.create({
         zone: joystickContainer,
         mode: 'static',
-        position: { left: '50%', top: '50%' },
-        color: 'blue',
+        position: { bottom: '22%', right: '22%' },
+        color: 'green',
         restJoystick: true,
       });
 
