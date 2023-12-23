@@ -13,24 +13,23 @@ services:
     # depends_on:
     #   - pigpiod
 
-  # ustreamer:
-  #   container_name: ustreamer
-  #   image: pikvm/ustreamer:latest
-  #   restart: always
-  #   command: --host=0.0.0.0 \
-  #            --port=8001 \
-  #            --allow-origin=\* \
-  #            --device=/dev/video0 
-  #            --device-timeout=2
-  #            --workers=2 \
-  #            --quality=50 \
-  #            --encoder=HW \
-  #            --resolution=320x240
-  #   ports:
-  #     - "8001:8001"
-  #   devices:
-  #     - /dev/video0
-  #   stop_grace_period: 1s
+  ustreamer:
+    container_name: ustreamer
+    image: pikvm/ustreamer:latest
+    restart: always
+    command: --host=0.0.0.0 \
+             --port=8001 \
+             --allow-origin=\* \
+             --device=/dev/video0 
+             --device-timeout=2
+             --workers=2 \
+             --quality=50 \
+             --encoder=HW
+    ports:
+      - "8001:8001"
+    devices:
+      - /dev/video0
+    stop_grace_period: 1s
     
   pigpiod:
     container_name: pigpiod

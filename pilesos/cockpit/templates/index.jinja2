@@ -127,7 +127,7 @@
       });
 
       // Connect to the WebSocket server
-      const socket = new WebSocket(`ws://${window.location.host}/input`);
+      const socket = new WebSocket(`ws://${window.location.host}/ws`);
 
       // Event listener for joystick movement
       joystick.on('move', function () {

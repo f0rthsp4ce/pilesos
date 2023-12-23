@@ -13,7 +13,7 @@ gpio: pigpio.pi
 gpio = pigpio.pi(host="pigpiod", port=8888)
 if not gpio.connected:
     # if pigpiod daemon is unavailable, create a virtual mock interface
-    logger.warning("USING MOCKED GPIO. NO REAL PINS ARE USED.")
+    logger.warning("USING FAKE GPIO. NO REAL PINS ARE USED.")
     from unittest.mock import MagicMock
 
     gpio.set_mode = MagicMock()
