@@ -29,12 +29,13 @@ class BumperStateMonitor:
         # Initialize GPIO pins
         gpio.set_pull_up_down(gpio=self.PIN, pud=pigpio.PUD_UP)
         gpio.set_mode(self.PIN, pigpio.INPUT)
+        gpio.set_glitch_filter(self.PIN, 100_000)  # 100ms
 
         # Set up trigger
         def callback(pin: int, new_state: int, tick: int):
-            # HIGH = collision
-            # LOW = no collision
-            self.collision_detected = bool(new_state)
+            # HIGH = no collision
+            # LOW = collision
+            self.collision_detected = not bool(new_state)
             # run user defined callback
             if self.ADDITIONAL_CALLBACK:
                 self.ADDITIONAL_CALLBACK(self.collision_detected)
