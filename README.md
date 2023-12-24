@@ -22,7 +22,7 @@ most images are alpine based.
 
 ## control chain
 
-`browser → pilesos.cockpit → pilesos.input → pilesos.hardware → pigpiod → [gpio] → [motor driver]`
+`browser → pilesos.server → pilesos.websocket.input → pilesos.hardware → pigpiod → [gpio] → [motor driver]`
 
 ## deploy
 
