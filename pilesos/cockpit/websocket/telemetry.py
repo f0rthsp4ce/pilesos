@@ -1,6 +1,7 @@
 import random
 
 from pydantic import BaseModel
+
 from pilesos.hardware.bumper import left_bumper, right_bumper
 
 

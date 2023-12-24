@@ -3,7 +3,6 @@ Bumper impact sensor. Used to detect front collisions with object.
 May optionally run a user-defined callback.
 """
 
-from audioop import add
 from logging import getLogger
 from typing import Callable
 
