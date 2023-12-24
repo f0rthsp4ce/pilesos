@@ -44,8 +44,8 @@ class BumperStateMonitor:
 
 
 left_bumper = BumperStateMonitor(
-    pin=17, additional_callback=lambda x: logger.info("left: %s" % x)
+    pin=17, additional_callback=lambda x: logger.debug("left: %s" % x)
 )
 right_bumper = BumperStateMonitor(
-    pin=27, additional_callback=lambda x: logger.info("right: %s" % x)
+    pin=27, additional_callback=lambda x: logger.debug("right: %s" % x)
 )
