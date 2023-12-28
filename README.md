@@ -35,7 +35,7 @@ state of all controls → json → websocket.
 
 ## telemetry chain
 
-telemetry is currently passive. when you trigger a control, cockpit reads current sensor data and sends it back to the client.
+telemetry is sent every 100ms.
 
 `browser ← pilesos.server ← pilesos.websocket.telemetry ← pilesos.hardware ← pigpiod ← [gpio] ← [sensor pins]`
 
