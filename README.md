@@ -20,9 +20,24 @@ most images are alpine based.
 - [ustreamer](https://github.com/pikvm/ustreamer) — fast webcam streaming
 - [pigpiod](https://abyz.me.uk/rpi/pigpio/python.html) — gpio daemon to control several independent PWM generators
 
+### hardware
+
+- disassembled vacuum cleaner robot.
+- L298N motor driver.
+- 18650 batteries + BMS.
+- several voltage converters.
+
 ## control chain
 
+state of all controls → json → websocket.
+
 `browser → pilesos.server → pilesos.websocket.input → pilesos.hardware → pigpiod → [gpio] → [motor driver]`
+
+## telemetry chain
+
+telemetry is currently passive. when you trigger a control, cockpit reads current sensor data and sends it back to the client.
+
+`browser ← pilesos.server ← pilesos.websocket.telemetry ← pilesos.hardware ← pigpiod ← [gpio] ← [sensor pins]`
 
 ## deploy
 
