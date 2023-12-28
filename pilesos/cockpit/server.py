@@ -7,7 +7,8 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from pilesos.cockpit.websocket.input import WebsocketInput, process_websocket_input
+from pilesos.cockpit.websocket.input import (WebsocketInput,
+                                             process_websocket_input)
 from pilesos.cockpit.websocket.telemetry import get_telemetry
 
 logger = getLogger(__name__)
