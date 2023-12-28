@@ -9,6 +9,7 @@ from typing import Callable
 import pigpio
 
 from pilesos.hardware.gpio import gpio
+from pilesos.hardware.pinout import BumperPinout
 
 logger = getLogger(__name__)
 
@@ -43,8 +44,8 @@ class BumperStateMonitor:
 
 
 left_bumper = BumperStateMonitor(
-    pin=17, additional_callback=lambda x: logger.debug("left: %s" % x)
+    pin=BumperPinout.LEFT, additional_callback=lambda x: logger.debug("left: %s" % x)
 )
 right_bumper = BumperStateMonitor(
-    pin=27, additional_callback=lambda x: logger.debug("right: %s" % x)
+    pin=BumperPinout.RIGHT, additional_callback=lambda x: logger.debug("right: %s" % x)
 )

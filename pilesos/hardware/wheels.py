@@ -1,8 +1,7 @@
 """
 Main wheels controller. Used for moving the vehicle.
 
-Driver: DRV8801
-PDF: https://www.ti.com/lit/ds/symlink/drv8801.pdf
+Driver: L298N
 """
 
 from logging import getLogger
@@ -10,16 +9,16 @@ from logging import getLogger
 import pigpio
 
 from pilesos.hardware.gpio import gpio
+from pilesos.hardware.pinout import WheelsPinout
 
 logger = getLogger(__name__)
 
 
 class WheelController:
-    """Class for controlling all wheels of the vehicle."""
-
     # GPIO pins configuration
     EN: int
-    PHASE: int
+    IN1: int
+    IN2: int
     # some motors / drivers are connected backwards
     reversed: bool = False
 
@@ -36,20 +35,19 @@ class WheelController:
         value_scaled = float(value - min1) / float(left_span)
         return round(min2 + (value_scaled * right_span))
 
-    def __init__(self, en: int, phase: int, reversed: bool = False) -> None:
-        """Initialize EN, PHASE pins and start PWM"""
-        self.EN = en
-        self.PHASE = phase
-        self.REVERSED = reversed
-        # EN pin (driver off)
-        gpio.set_mode(self.EN, mode=pigpio.OUTPUT)
-        gpio.write(self.EN, pigpio.LOW)
-        # PHASE pin (motor off)
-        gpio.set_mode(self.PHASE, mode=pigpio.OUTPUT)
-        gpio.write(self.PHASE, pigpio.LOW)
-        # PHASE PWM 1kHz, 50% duty cycle (stop motor)
-        gpio.set_PWM_frequency(user_gpio=self.PHASE, frequency=1000)
-        gpio.set_PWM_dutycycle(user_gpio=self.PHASE, dutycycle=50)
+    def __init__(self, EN: int, IN1: int, IN2: int, reversed: bool = False) -> None:
+        """Initialize EN, IN1, IN2 pins and start PWM"""
+        self.EN = EN
+        self.IN1 = IN1
+        self.IN2 = IN2
+        self.reversed = reversed
+        # Set all pins as output, LOW
+        for pin in self.EN, self.IN1, self.IN2:
+            gpio.set_mode(self.EN, mode=pigpio.OUTPUT)
+            gpio.write(self.EN, pigpio.LOW)
+        # EN PWM 1kHz, 0% duty cycle (stop motor)
+        gpio.set_PWM_frequency(user_gpio=self.EN, frequency=1000)
+        gpio.set_PWM_dutycycle(user_gpio=self.EN, dutycycle=0)
 
     def set_speed(self, speed: int) -> None:
         """Set speed and direction of the wheel.
@@ -62,19 +60,34 @@ class WheelController:
             set_speed(-92)
         """
         logger.debug("speed=%s" % speed)
-        if self.REVERSED:
+        if self.reversed:
             speed = -speed
-        gpio.set_PWM_dutycycle(
-            user_gpio=self.PHASE,
-            # map -100..100 to 1..255 (minus some edges) where 128 = 50% duty cycle = stop.
-            dutycycle=self.value_map(speed, -100, 100, 3, 253),
-        )
+        # set motor direction
+        if speed < 0:
+            gpio.write(self.IN1, pigpio.HIGH)
+            gpio.write(self.IN2, pigpio.LOW)
+        if speed > 0:
+            gpio.write(self.IN1, pigpio.LOW)
+            gpio.write(self.IN2, pigpio.HIGH)
         if speed == 0:
-            # power off if stopped
-            gpio.write(self.EN, pigpio.LOW)
-        else:
-            gpio.write(self.EN, pigpio.HIGH)
+            gpio.write(self.IN1, pigpio.LOW)
+            gpio.write(self.IN2, pigpio.LOW)
+        # set motor speed
+        gpio.set_PWM_dutycycle(
+            user_gpio=self.EN,
+            # map 0..100 to 1..255
+            dutycycle=self.value_map(abs(speed), 0, 100, 0, 255),
+        )
 
 
-left_wheel_controller = WheelController(en=26, phase=16)
-right_wheel_controller = WheelController(en=5, phase=13, reversed=True)
+left_wheel_controller = WheelController(
+    EN=WheelsPinout.ENA,
+    IN1=WheelsPinout.IN1,
+    IN2=WheelsPinout.IN2,
+)
+right_wheel_controller = WheelController(
+    EN=WheelsPinout.ENB,
+    IN1=WheelsPinout.IN3,
+    IN2=WheelsPinout.IN4,
+    reversed=True,
+)
