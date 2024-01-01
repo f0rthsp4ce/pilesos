@@ -185,8 +185,8 @@
       // Telemetry receiver
       socket.addEventListener('message', function (event) {
         // console.debug("recv: ", event.data);
-        const data = JSON.parse(event.data);
-        batteryIndicator.textContent = `${data.battery_percentage}%`;
+        const telemetry = JSON.parse(event.data);
+        batteryIndicator.textContent = `${telemetry.battery_percentage}%`;
       });
 
     });
