@@ -1,14 +1,14 @@
 class WheelsPinout:
-    ENA = 11
+    ENA = 17
 
-    IN1 = 13
-    IN2 = 14
-    IN3 = 15
-    IN4 = 16
+    IN1 = 27
+    IN2 = 22
+    IN3 = 23
+    IN4 = 24
 
-    ENB = 12
+    ENB = 25
 
 
 class BumperPinout:
-    LEFT = 17
-    RIGHT = 27
+    LEFT = 26
+    RIGHT = 20

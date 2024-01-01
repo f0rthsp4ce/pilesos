@@ -84,10 +84,10 @@ left_wheel_controller = WheelController(
     EN=WheelsPinout.ENA,
     IN1=WheelsPinout.IN1,
     IN2=WheelsPinout.IN2,
+    reversed=True,
 )
 right_wheel_controller = WheelController(
     EN=WheelsPinout.ENB,
     IN1=WheelsPinout.IN3,
     IN2=WheelsPinout.IN4,
-    reversed=True,
 )
