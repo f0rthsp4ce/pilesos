@@ -2,8 +2,7 @@ from logging import getLogger
 
 from pydantic import BaseModel
 
-from pilesos.hardware.wheels import (left_wheel_controller,
-                                     right_wheel_controller)
+from pilesos.hardware.wheels import left_wheel_controller, right_wheel_controller
 
 logger = getLogger(__name__)
 
@@ -22,9 +21,9 @@ class Buttons(BaseModel):
 
 
 class WebsocketInput(BaseModel):
-    joystick: Joystick
-    switches: Switches
-    buttons: Buttons
+    joystick: Joystick | None
+    buttons: Buttons | None
+    switches: Switches | None = None
 
 
 def map_joystick_to_tracks(joystick_x, joystick_y) -> tuple[int, int]:
@@ -52,9 +51,10 @@ def map_joystick_to_tracks(joystick_x, joystick_y) -> tuple[int, int]:
 
 
 def process_websocket_input(user_input: WebsocketInput):
-    L_throttle, R_throttle = map_joystick_to_tracks(
-        user_input.joystick.x, user_input.joystick.y
-    )
-    left_wheel_controller.set_speed(L_throttle)
-    right_wheel_controller.set_speed(R_throttle)
-    logger.debug("L=%s R=%s" % (L_throttle, R_throttle))
+    if user_input.joystick:
+        L_throttle, R_throttle = map_joystick_to_tracks(
+            user_input.joystick.x, user_input.joystick.y
+        )
+        left_wheel_controller.set_speed(L_throttle)
+        right_wheel_controller.set_speed(R_throttle)
+        logger.debug("L=%s R=%s" % (L_throttle, R_throttle))

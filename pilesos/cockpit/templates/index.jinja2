@@ -111,20 +111,32 @@
       // Update camera stream url
       document.getElementById("camera").src = `http://${window.location.host}:8001/stream`
 
-      // Define elements
+      // Define global input state
+      var state = {
+        joystick: { x: 0, y: 0 },
+        switches: {
+          lights: false,
+        },
+        buttons: {
+          buzzer: false,
+        }
+      };
+
+      // Function to send the whole state of inputs to the server
+      function sendState(overrides = {}) {
+        const finalState = { ...state, ...overrides };
+        const payload = JSON.stringify(finalState);
+        // console.debug("sent: ", payload);
+        socket.send(payload);
+      }
+
+      // Define control elements
       const joystickContainer = document.getElementById('joystickContainer');
       const buzzerButton = document.getElementById('buzzerButton');
       const lightsSwitch = document.getElementById('lightsSwitch');
-      const batteryIndicator = document.getElementById('batteryIndicator');
 
-      // Initialize NippleJS
-      const joystick = nipplejs.create({
-        zone: joystickContainer,
-        mode: 'static',
-        position: { bottom: '25%', right: '25%' },
-        color: 'green',
-        restJoystick: true,
-      });
+      // Define telemetry elements
+      const batteryIndicator = document.getElementById('batteryIndicator');
 
       // Connect to the WebSocket server
       const socket = new WebSocket(`ws://${window.location.host}/ws`);
@@ -135,24 +147,41 @@
         socket.close();
       });
 
-      // Event listener for joystick movement
-      joystick.on('move', function () {
-        sendState();
+      // Telemetry receiver
+      socket.addEventListener('message', function (event) {
+        // console.debug("recv: ", event.data);
+        const telemetry = JSON.parse(event.data);
+        batteryIndicator.textContent = `${telemetry.battery_percentage}%`;
       });
 
-      // Event listener for joystick release
-      joystick.on('end', function () {
-        // Send joystick coordinates as { x: 0, y: 0 } when released
-        sendState({ joystick: { x: 0, y: 0 } });
+      // Initialize NippleJS
+      const joystick_manager = nipplejs.create({
+        zone: joystickContainer,
+        mode: 'static',
+        position: { bottom: '25%', right: '25%' },
+        color: 'green',
+        restJoystick: true,
+      });
+
+      // Event listener for joystick movement
+      joystick_manager.on('move', function () {
+        state.joystick = joystick_manager[0].frontPosition;
+        sendState();
+      });
+      joystick_manager.on('end', function () {
+        state.joystick = { x: 0, y: 0 };
+        sendState();
       });
 
       // Button events
       function handleButtonPress() {
         buzzerButton.classList.add('active');
+        state.buttons.buzzer = true;
         sendState();
       }
       function handleButtonRelease() {
         buzzerButton.classList.remove('active');
+        state.buttons.buzzer = false;
         sendState();
       }
       buzzerButton.addEventListener('mousedown', handleButtonPress);
@@ -160,33 +189,9 @@
       buzzerButton.addEventListener('mouseup', handleButtonRelease);
       buzzerButton.addEventListener('touchend', handleButtonRelease);
 
-      // Event listener for lights switch
+      // Switches events
       lightsSwitch.addEventListener('change', function () {
         sendState();
-      });
-
-      // Function to send the whole state of inputs to the server
-      function sendState(overrides = {}) {
-        const state = {
-          joystick: joystick[0].frontPosition,
-          switches: {
-            lights: lightsSwitch.checked,
-          },
-          buttons: {
-            buzzer: buzzerButton.classList.contains('active'),
-          }
-        };
-        const finalState = { ...state, ...overrides };
-        const payload = JSON.stringify(finalState);
-        // console.debug("sent: ", payload);
-        socket.send(payload);
-      }
-
-      // Telemetry receiver
-      socket.addEventListener('message', function (event) {
-        // console.debug("recv: ", event.data);
-        const telemetry = JSON.parse(event.data);
-        batteryIndicator.textContent = `${telemetry.battery_percentage}%`;
       });
 
     });
