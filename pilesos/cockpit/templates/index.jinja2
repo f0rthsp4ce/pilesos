@@ -8,103 +8,158 @@
   <!-- Include NippleJS -->
   <script src="/static/nipplejs.js"></script>
 
+  <!-- Reset CSS -->
+  <link rel="stylesheet" href="/static/normalize.css">
   <style>
     /* colors */
     :root {
       --bg: black;
-      --accent: lawngreen;
+      --accent: white;
+      --secondary: gray;
+      --active: white;
       --text: white;
+      --container: #222;
     }
 
     html {
       background-color: var(--bg);
       color: var(--text);
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: large;
+      font-family: monospace;
     }
 
+    .control-container {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .control-block {
+      flex: 1;
+      background-color: var(--container);
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      margin: 0.5rem;
+    }
+
+    .control-block>p {
+      margin-left: 0.5rem;
+      margin-right: 0.5rem;
+    }
+
+    /* Button style */
     button,
     input,
     label.checkbox-button {
-      min-height: 2rem;
-      min-width: 2rem;
+      display: inline-block;
       font-size: large;
-      color: var(--accent);
-      background-color: var(--bg);
-      border: 2px solid var(--accent);
-      padding: 1rem;
+      border: 2px solid;
+      border-radius: 0.5rem;
+      padding: 0.5rem;
+      margin: 0.25rem;
     }
 
-    button:active {
-      color: var(--bg);
-      background-color: var(--accent);
-    }
-
-    /* checkbox buttons */
+    /* Checkbox button */
     input[type="checkbox"] {
       display: none;
     }
 
     label.checkbox-button {
-      background-color: var(--bg);
-      color: var(--accent);
       cursor: pointer;
+    }
+
+    /* controls placement */
+    #camera {
+      min-width: 60vw;
+      max-width: 100%;
+      max-height: 70vw;
+    }
+
+
+    .joystick-box {
+      display: flex;
+      min-height: 10rem;
+      min-width: 10rem;
+      justify-content: center;
+      align-items: center;
+    }
+
+
+    #joystick {
+      position: relative;
+    }
+
+    /* Button colors */
+    button,
+    input,
+    label.checkbox-button {
+      color: var(--accent);
+      background-color: var(--bg);
+      border-color: var(--accent);
+      text-align: center;
+    }
+
+    button:active {
+      border-color: var(--active);
+      color: var(--bg);
+      background-color: var(--active);
+    }
+
+    /* Checkbox button colors */
+    label.checkbox-button {
+      border-color: var(--secondary);
     }
 
     /* Change button color when checkbox is checked */
     input[type="checkbox"]:checked+label.checkbox-button {
       background-color: var(--accent);
       color: var(--bg);
+      border-color: var(--accent);
     }
 
     /* prevent mobile browsers from selecting text when using joystick and controls */
-    html {
-      -webkit-user-select: none;
-      -ms-user-select: none;
-      user-select: none;
-    }
-
-    *:not(#joystickController) {
+    * {
+      -webkit-user-select: none !important;
+      -ms-user-select: none !important;
+      -moz-user-select: none !important;
+      user-select: none !important;
+      -webkit-touch-callout: none !important;
+      -webkit-user-drag: none !important;
       touch-action: manipulation;
-
-    }
-
-    /* controls placement */
-    #camera {
-      max-width: 100%;
-      height: auto;
-    }
-
-    .control {
-      margin: 2rem;
-      box-sizing: border-box;
     }
   </style>
 </head>
 
 <body>
 
-  <div>
-    <img id="camera" src="#" alt="Camera">
-  </div>
+
 
 
   <div class="control-container">
-    <div>
-      <h3>Battery Charge: <span id="batteryIndicator">100%</span></h3>
+    <div class="control-block">
+      <img id="camera" src="#" alt="Camera">
     </div>
 
-    <div class="control">
-      <button id="buzzerButton">Buzzer</button>
+    <div class="control-block">
+      <div id="joystick" class="joystick-box">
+      </div>
     </div>
 
-    <div class="control">
+
+
+    <div class="control-block">
+      <button id="buzzerButton">🔊 Buzz</button>
+    </div>
+
+    <div class="control-block">
       <input type="checkbox" id="lightsSwitch">
-      <label for="lightsSwitch" class="checkbox-button">Lights</label>
+      <label for="lightsSwitch" class="checkbox-button">💡 Light</label>
+    </div>
+
+    <div class="control-block">
+      <p>🔋 Battery: <span id="batteryIndicator">100%</span></p>
+      <p>🔌 Charging: <span id="chargingIndcator">No</span></p>
     </div>
   </div>
-
-  <div id="joystickContainer"></div>
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -126,12 +181,12 @@
       function sendState(overrides = {}) {
         const finalState = { ...state, ...overrides };
         const payload = JSON.stringify(finalState);
-        // console.debug("sent: ", payload);
+        console.debug("sent: ", payload);
         socket.send(payload);
       }
 
       // Define control elements
-      const joystickContainer = document.getElementById('joystickContainer');
+      const joystick = document.getElementById('joystick');
       const buzzerButton = document.getElementById('buzzerButton');
       const lightsSwitch = document.getElementById('lightsSwitch');
 
@@ -156,16 +211,33 @@
 
       // Initialize NippleJS
       const joystick_manager = nipplejs.create({
-        zone: joystickContainer,
+        zone: document.getElementById("joystick"),
         mode: 'static',
-        position: { bottom: '25%', right: '25%' },
-        color: 'green',
+        color: getComputedStyle(document.documentElement).getPropertyValue('--accent'),
         restJoystick: true,
+        dynamicPage: true,
       });
 
       // Event listener for joystick movement
       joystick_manager.on('move', function () {
-        state.joystick = joystick_manager[0].frontPosition;
+        function filter(value) {
+          // joystick max tilt in any direction
+          let value_max = 50;
+          // filtering strength
+          let exp = 1.5;
+          // process negative tilt as well, save original number sign
+          let orig_sign = Math.sign(value);
+          value = Math.abs(value);
+          // calculate filtered value
+          let powed = Math.pow(value, 1.5) || 0;
+          // limit to original range of values
+          let pow_maximum = Math.pow(value_max, exp);
+          let limited = powed / pow_maximum * value_max;
+          // restore original sign
+          return orig_sign * limited;
+        }
+        state.joystick.x = filter(joystick_manager[0].frontPosition.x);
+        state.joystick.y = filter(joystick_manager[0].frontPosition.y);
         sendState();
       });
       joystick_manager.on('end', function () {
