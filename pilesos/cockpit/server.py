@@ -47,7 +47,7 @@ async def websocket_endpoint(websocket: WebSocket):
             ):
                 # if there is no input from the user for >=1 second, then turn off motors, buzzers, etc.
                 # this prevents the robot from deadmoving into something when the signal is lost.
-                process_websocket_input(
+                await process_websocket_input(
                     WebsocketInput(
                         joystick=Joystick(x=0, y=0),
                         buttons=Buttons(buzzer=False),
@@ -71,7 +71,7 @@ async def websocket_endpoint(websocket: WebSocket):
             # parse and validate it
             user_input = WebsocketInput(**json.loads(data))
             # update motors, buzzers, lights, etc
-            process_websocket_input(user_input)
+            await process_websocket_input(user_input)
             # reset killswitch, input is received
             last_received_input = datetime.now()
     except WebSocketDisconnect:

@@ -263,6 +263,7 @@
 
       // Switches events
       lightsSwitch.addEventListener('change', function () {
+        state.switches.lights = lightsSwitch.checked;
         sendState();
       });
 

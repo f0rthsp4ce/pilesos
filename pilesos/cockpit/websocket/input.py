@@ -1,8 +1,16 @@
 from logging import getLogger
+from random import choice, randint
 
 from pydantic import BaseModel
 
 from pilesos.hardware.wheels import left_wheel_controller, right_wheel_controller
+from pilesos.hardware.strip import (
+    bumper_strip,
+    ColorWipeEffect,
+    RainbowCycleEffect,
+    StripEffect,
+    RGBW,
+)
 
 logger = getLogger(__name__)
 
@@ -50,7 +58,7 @@ def map_joystick_to_tracks(joystick_x, joystick_y) -> tuple[int, int]:
     return int(left_track_throttle), int(right_track_throttle)
 
 
-def process_websocket_input(user_input: WebsocketInput):
+async def process_websocket_input(user_input: WebsocketInput):
     if user_input.joystick:
         L_throttle, R_throttle = map_joystick_to_tracks(
             user_input.joystick.x, user_input.joystick.y
@@ -58,3 +66,21 @@ def process_websocket_input(user_input: WebsocketInput):
         left_wheel_controller.set_speed(L_throttle)
         right_wheel_controller.set_speed(R_throttle)
         logger.debug("L=%s R=%s" % (L_throttle, R_throttle))
+    if user_input.switches:
+        effect: StripEffect | None = None
+        if user_input.switches.lights:
+            effect = choice(
+                (
+                    ColorWipeEffect(
+                        color=RGBW(
+                            randint(0, 255),
+                            randint(0, 255),
+                            randint(0, 255),
+                        )
+                    ),
+                    RainbowCycleEffect(iterations=5),
+                )
+            )
+        else:
+            effect = ColorWipeEffect(color=RGBW(0, 0, 0))
+        await bumper_strip.set_effect(effect)

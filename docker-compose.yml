@@ -12,7 +12,11 @@ services:
       - "80:8000"
     # depends_on:
     #   - pigpiod
-
+    devices:
+      - /dev/gpiochip0
+      - /dev/gpiomem
+    privileged: true
+  
   ustreamer:
     container_name: ustreamer
     image: pikvm/ustreamer:latest

@@ -12,3 +12,7 @@ class WheelsPinout:
 class BumperPinout:
     LEFT = 26
     RIGHT = 20
+
+
+class StripPinout:
+    DIN = 18

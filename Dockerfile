@@ -1,5 +1,8 @@
 FROM python:3.12-slim
 
+RUN apt update -y && apt upgrade -y
+RUN apt install -y gcc
+
 COPY pilesos /app/pilesos
 ADD requirements.txt /app
 

@@ -10,6 +10,7 @@ uvicorn = "*"
 pyyaml = "*"
 jinja2 = "*"
 pigpio = "*"
+rpi_ws281x = "*"
 
 [dev-packages]
 black = "*"
