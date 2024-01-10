@@ -54,7 +54,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     )
                 )
                 logger.debug("no input, resetting.")
-            await asyncio.sleep(0.500)
+            await asyncio.sleep(1)
 
     async def send_telemetry(ws=websocket):
         while True:

@@ -29,8 +29,8 @@ class Buttons(BaseModel):
 
 
 class WebsocketInput(BaseModel):
-    joystick: Joystick | None
-    buttons: Buttons | None
+    joystick: Joystick | None = None
+    buttons: Buttons | None = None
     switches: Switches | None = None
 
 

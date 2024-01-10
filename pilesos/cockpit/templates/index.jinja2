@@ -166,21 +166,9 @@
       // Update camera stream url
       document.getElementById("camera").src = `http://${window.location.host}:8001/stream`
 
-      // Define global input state
-      var state = {
-        joystick: { x: 0, y: 0 },
-        switches: {
-          lights: false,
-        },
-        buttons: {
-          buzzer: false,
-        }
-      };
-
       // Function to send the whole state of inputs to the server
-      function sendState(overrides = {}) {
-        const finalState = { ...state, ...overrides };
-        const payload = JSON.stringify(finalState);
+      function sendControl(control) {
+        const payload = JSON.stringify(control);
         console.debug("sent: ", payload);
         socket.send(payload);
       }
@@ -236,25 +224,27 @@
           // restore original sign
           return orig_sign * limited;
         }
-        state.joystick.x = filter(joystick_manager[0].frontPosition.x);
-        state.joystick.y = filter(joystick_manager[0].frontPosition.y);
-        sendState();
+        sendControl({
+          joystick: {
+            x: filter(joystick_manager[0].frontPosition.x),
+            y: filter(joystick_manager[0].frontPosition.y)
+          }
+        });
       });
       joystick_manager.on('end', function () {
-        state.joystick = { x: 0, y: 0 };
-        sendState();
+        sendControl({
+          joystick: { x: 0, y: 0 }
+        });
       });
 
       // Button events
       function handleButtonPress() {
         buzzerButton.classList.add('active');
-        state.buttons.buzzer = true;
-        sendState();
+        sendControl({ buttons: { buzzer: true } });
       }
       function handleButtonRelease() {
         buzzerButton.classList.remove('active');
-        state.buttons.buzzer = false;
-        sendState();
+        sendControl({ buttons: { buzzer: false } });
       }
       buzzerButton.addEventListener('mousedown', handleButtonPress);
       buzzerButton.addEventListener('touchstart', handleButtonPress);
@@ -263,8 +253,7 @@
 
       // Switches events
       lightsSwitch.addEventListener('change', function () {
-        state.switches.lights = lightsSwitch.checked;
-        sendState();
+        sendControl({ switches: { lights: lightsSwitch.checked } });
       });
 
     });
