@@ -1,3 +1,4 @@
+Loading .env environment variables...
 -i https://pypi.org/simple
 annotated-types==0.6.0; python_version >= '3.8'
 anyio==4.2.0; python_version >= '3.8'
