@@ -46,6 +46,5 @@ telemetry is sent every 100ms.
 ```bash
 git clone https://github.com/f0rthsp4ce/pilesos
 cd pilesos
-sudo pacman -S gcc
 docker compose up -d
 ```

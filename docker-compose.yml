@@ -10,9 +10,10 @@ services:
       - ./pilesos:/app/pilesos
     ports:
       - "80:8000"
-    # depends_on:
-    #   - pigpiod
     devices:
+      # camera v4l controls
+      - /dev/video0
+      # direct gpio controls for event triggering and rgb strip
       - /dev/gpiochip0
       - /dev/gpiomem
     privileged: true
@@ -20,15 +21,15 @@ services:
   ustreamer:
     container_name: ustreamer
     image: pikvm/ustreamer:latest
-    restart: always
     command: --host=0.0.0.0 \
              --port=8001 \
              --allow-origin=\* \
-             --device=/dev/video0 
-             --device-timeout=2
-             --workers=2 \
-             --quality=50 \
-             --encoder=HW
+             --device=/dev/video0 \
+             --device-timeout=5 \
+             --workers=4 \
+             --encoder=HW \
+             --resolution=480x240 \
+             --quality=50
     ports:
       - "8001:8001"
     devices:

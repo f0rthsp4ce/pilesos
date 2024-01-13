@@ -3,14 +3,15 @@ from random import choice, randint
 
 from pydantic import BaseModel
 
-from pilesos.hardware.wheels import left_wheel_controller, right_wheel_controller
 from pilesos.hardware.strip import (
-    bumper_strip,
+    RGBW,
     ColorWipeEffect,
     RainbowCycleEffect,
     StripEffect,
-    RGBW,
+    bumper_strip,
 )
+from pilesos.hardware.wheels import left_wheel_controller, right_wheel_controller
+from pilesos.hardware.camera import front_camera
 
 logger = getLogger(__name__)
 
@@ -25,7 +26,7 @@ class Switches(BaseModel):
 
 
 class Buttons(BaseModel):
-    buzzer: bool
+    camera_fix: bool
 
 
 class WebsocketInput(BaseModel):

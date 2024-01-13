@@ -27,6 +27,16 @@
       font-family: monospace;
     }
 
+    /* typography */
+    .text {
+      padding-left: 0.5rem;
+    }
+
+    .secondary {
+      color: var(--secondary)
+    }
+
+    /* control islands */
     .control-container {
       display: flex;
       flex-wrap: wrap;
@@ -41,11 +51,6 @@
       margin: 0.5rem;
     }
 
-    .control-block>p {
-      margin-left: 0.5rem;
-      margin-right: 0.5rem;
-    }
-
     /* Button style */
     button,
     input,
@@ -56,6 +61,7 @@
       border-radius: 0.5rem;
       padding: 0.5rem;
       margin: 0.25rem;
+      text-wrap: nowrap;
     }
 
     /* Checkbox button */
@@ -69,6 +75,7 @@
 
     /* controls placement */
     #camera {
+      width: 100%;
       min-width: 60vw;
       max-width: 100%;
       max-height: 70vw;
@@ -77,8 +84,8 @@
 
     .joystick-box {
       display: flex;
-      min-height: 10rem;
-      min-width: 10rem;
+      min-height: 20rem;
+      min-width: 20rem;
       justify-content: center;
       align-items: center;
     }
@@ -86,6 +93,15 @@
 
     #joystick {
       position: relative;
+    }
+
+    /* telemetry style */
+    .telemetry-table {
+      min-width: max-content;
+    }
+
+    .telemetry-table td {
+      min-width: 2rem;
     }
 
     /* Button colors */
@@ -135,6 +151,7 @@
 
 
   <div class="control-container">
+
     <div class="control-block">
       <img id="camera" src="#" alt="Camera">
     </div>
@@ -144,120 +161,134 @@
       </div>
     </div>
 
-
-
     <div class="control-block">
-      <button id="buzzerButton">🔊 Buzz</button>
-    </div>
-
-    <div class="control-block">
+      <button id="cameraFixButton">🎥 Fix</button>
       <input type="checkbox" id="lightsSwitch">
       <label for="lightsSwitch" class="checkbox-button">💡 Light</label>
     </div>
 
     <div class="control-block">
-      <p>🔋 Battery: <span id="batteryIndicator">100%</span></p>
-      <p>🔌 Charging: <span id="chargingIndcator">No</span></p>
+      <table class="telemetry-table">
+        <tr>
+          <td>🔋 Battery:</td>
+          <td id="batteryIndicator">100%</td>
+        </tr>
+        <tr>
+          <td>🔌 Charging:</td>
+          <td id="chargingIndcator">No</td>
+        </tr>
+      </table>
     </div>
-  </div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      // Update camera stream url
-      document.getElementById("camera").src = `http://${window.location.host}:8001/stream`
 
-      // Function to send the whole state of inputs to the server
-      function sendControl(control) {
-        const payload = JSON.stringify(control);
-        console.debug("sent: ", payload);
-        socket.send(payload);
-      }
+    <div class="control-block">
+      <div class="text">
+        <h2>PiLesos control panel</h2>
+        <p class="secondary">⚠️ Due to very nature of hacked devices, they may behave unexpectedly. You
+          are warned.
+        </p>
+      </div>
+    </div>
 
-      // Define control elements
-      const joystick = document.getElementById('joystick');
-      const buzzerButton = document.getElementById('buzzerButton');
-      const lightsSwitch = document.getElementById('lightsSwitch');
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        // Update camera stream url
+        document.getElementById("camera").src = `http://${window.location.host}:8001/stream`
 
-      // Define telemetry elements
-      const batteryIndicator = document.getElementById('batteryIndicator');
-
-      // Connect to the WebSocket server
-      const socket = new WebSocket(`ws://${window.location.host}/ws`);
-      socket.addEventListener('error', function (event) {
-        console.error('WebSocket error:', event);
-      });
-      window.addEventListener('unload', function () {
-        socket.close();
-      });
-
-      // Telemetry receiver
-      socket.addEventListener('message', function (event) {
-        // console.debug("recv: ", event.data);
-        const telemetry = JSON.parse(event.data);
-        batteryIndicator.textContent = `${telemetry.battery_percentage}%`;
-      });
-
-      // Initialize NippleJS
-      const joystick_manager = nipplejs.create({
-        zone: document.getElementById("joystick"),
-        mode: 'static',
-        color: getComputedStyle(document.documentElement).getPropertyValue('--accent'),
-        restJoystick: true,
-        dynamicPage: true,
-      });
-
-      // Event listener for joystick movement
-      joystick_manager.on('move', function () {
-        function filter(value) {
-          // joystick max tilt in any direction
-          let value_max = 50;
-          // filtering strength
-          let exp = 1.5;
-          // process negative tilt as well, save original number sign
-          let orig_sign = Math.sign(value);
-          value = Math.abs(value);
-          // calculate filtered value
-          let powed = Math.pow(value, 1.5) || 0;
-          // limit to original range of values
-          let pow_maximum = Math.pow(value_max, exp);
-          let limited = powed / pow_maximum * value_max;
-          // restore original sign
-          return orig_sign * limited;
+        // Function to send the whole state of inputs to the server
+        function sendControl(control) {
+          const payload = JSON.stringify(control);
+          console.debug("sent: ", payload);
+          socket.send(payload);
         }
-        sendControl({
-          joystick: {
-            x: filter(joystick_manager[0].frontPosition.x),
-            y: filter(joystick_manager[0].frontPosition.y)
+
+        // Define control elements
+        const joystick = document.getElementById('joystick');
+        const cameraFixButton = document.getElementById('cameraFixButton');
+        const lightsSwitch = document.getElementById('lightsSwitch');
+
+        // Define telemetry elements
+        const batteryIndicator = document.getElementById('batteryIndicator');
+
+        // Connect to the WebSocket server
+        const socket = new WebSocket(`ws://${window.location.host}/ws`);
+        socket.addEventListener('error', function (event) {
+          console.error('WebSocket error:', event);
+        });
+        window.addEventListener('unload', function () {
+          socket.close();
+        });
+
+        // Telemetry receiver
+        socket.addEventListener('message', function (event) {
+          // console.debug("recv: ", event.data);
+          const telemetry = JSON.parse(event.data);
+          batteryIndicator.textContent = `${telemetry.battery_percentage}%`;
+        });
+
+        // Initialize NippleJS
+        const joystick_manager = nipplejs.create({
+          zone: document.getElementById("joystick"),
+          mode: 'static',
+          color: getComputedStyle(document.documentElement).getPropertyValue('--accent'),
+          restJoystick: true,
+          dynamicPage: true,
+          size: 200,
+        });
+
+        // Event listener for joystick movement
+        joystick_manager.on('move', function () {
+          function filter(value) {
+            let speed_divisor = 2;
+            // joystick max tilt in any direction
+            let value_max = 50;
+            // filtering strength
+            let exp = 1.33;
+            // process negative tilt as well, save original number sign
+            let orig_sign = Math.sign(value);
+            value = Math.abs(value);
+            // calculate filtered value
+            let powed = Math.pow(value, exp) || 0;
+            // limit to original range of values
+            let pow_maximum = Math.pow(value_max, exp);
+            let limited = powed / pow_maximum * value_max;
+            // restore original sign
+            return orig_sign * limited / speed_divisor;
           }
+          sendControl({
+            joystick: {
+              x: filter(joystick_manager[0].frontPosition.x),
+              y: filter(joystick_manager[0].frontPosition.y)
+            }
+          });
         });
-      });
-      joystick_manager.on('end', function () {
-        sendControl({
-          joystick: { x: 0, y: 0 }
+        joystick_manager.on('end', function () {
+          sendControl({
+            joystick: { x: 0, y: 0 }
+          });
         });
+
+        // Button events
+        function cameraFixButtonPress() {
+          cameraFixButton.classList.add('active');
+          sendControl({ buttons: { camera_fix: true } });
+        }
+        function cameraFixButtonRelease() {
+          cameraFixButton.classList.remove('active');
+          sendControl({ buttons: { camera_fix: false } });
+        }
+        cameraFixButton.addEventListener('mousedown', cameraFixButtonPress);
+        cameraFixButton.addEventListener('touchstart', cameraFixButtonPress);
+        cameraFixButton.addEventListener('mouseup', cameraFixButtonRelease);
+        cameraFixButton.addEventListener('touchend', cameraFixButtonRelease);
+
+        // Switches events
+        lightsSwitch.addEventListener('change', function () {
+          sendControl({ switches: { lights: lightsSwitch.checked } });
+        });
+
       });
-
-      // Button events
-      function handleButtonPress() {
-        buzzerButton.classList.add('active');
-        sendControl({ buttons: { buzzer: true } });
-      }
-      function handleButtonRelease() {
-        buzzerButton.classList.remove('active');
-        sendControl({ buttons: { buzzer: false } });
-      }
-      buzzerButton.addEventListener('mousedown', handleButtonPress);
-      buzzerButton.addEventListener('touchstart', handleButtonPress);
-      buzzerButton.addEventListener('mouseup', handleButtonRelease);
-      buzzerButton.addEventListener('touchend', handleButtonRelease);
-
-      // Switches events
-      lightsSwitch.addEventListener('change', function () {
-        sendControl({ switches: { lights: lightsSwitch.checked } });
-      });
-
-    });
-  </script>
+    </script>
 
 </body>
 
