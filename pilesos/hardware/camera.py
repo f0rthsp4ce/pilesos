@@ -12,7 +12,7 @@ class CameraController:
     def apply_settings(self):
         for setting, value in self.settings.items():
             subprocess.run(
-                ["v4l2-ctl", "-d", "/dev/video0", "--set-ctrl={setting}={value}"]
+                ["v4l2-ctl", "-d", "/dev/video0", f"--set-ctrl={setting}={value}"]
             )
 
 
