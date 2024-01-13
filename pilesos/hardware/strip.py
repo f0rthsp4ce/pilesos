@@ -1,8 +1,14 @@
 from __future__ import annotations
+
 import asyncio
+import logging
 from typing import Any
-from rpi_ws281x import PixelStrip, RGBW
+
+from rpi_ws281x import RGBW, PixelStrip
+
 from pilesos.hardware.pinout import StripPinout
+
+logger = logging.getLogger(__name__)
 
 
 def wheel(pos: int):
@@ -66,9 +72,20 @@ class StripController:
             pin=self.pin,
             num=self.led_count,
         )
-        self.strip.begin()
+        self.mocked = False
+        try:
+            self.strip.begin()
+        except RuntimeError as e:
+            if (
+                str(e)
+                == "ws2811_init failed with code -3 (Hardware revision is not supported)"
+            ):
+                logger.warning("WS2811 INIT FAILED. USING FAKE LED STRIP.")
+                self.mocked = True
 
     async def set_effect(self, effect: StripEffect):
+        if self.mocked:
+            return
         if self.current_effect and not self.current_effect.done():
             self.current_effect.cancel()
         self.current_effect = asyncio.create_task(effect(strip=self.strip))
