@@ -1,7 +1,9 @@
 from logging import getLogger
 from random import choice, randint
+from tkinter.tix import Tree
+from typing import Annotated, get_type_hints
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, confloat
 
 from pilesos.hardware.strip import (
     RGBW,
@@ -15,10 +17,13 @@ from pilesos.hardware.camera import front_camera
 
 logger = getLogger(__name__)
 
+JOYSTICK_MIN = -100
+JOYSTICK_MAX = 100
+
 
 class Joystick(BaseModel):
-    x: float
-    y: float
+    x: Annotated[float, Field(strict=True, ge=JOYSTICK_MIN, le=JOYSTICK_MAX)]
+    y: Annotated[float, Field(strict=True, ge=JOYSTICK_MIN, le=JOYSTICK_MAX)]
 
 
 class Switches(BaseModel):
@@ -40,7 +45,7 @@ def map_joystick_to_tracks(joystick_x, joystick_y) -> tuple[int, int]:
     # nipplejs inverts joystick Y
     joystick_y = -joystick_y
     # value ranges
-    max_joystick_value = 50
+    max_joystick_value = JOYSTICK_MAX
     max_track_throttle = 100
     # Map joystick values to track throttles
     left_track_throttle = (

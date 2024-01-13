@@ -236,12 +236,11 @@
           size: 200,
         });
 
-        // Event listener for joystick movement
-        joystick_manager.on('move', function () {
+        function sendJoystickControl() {
           function filter(value) {
             let speed_divisor = 2;
             // joystick max tilt in any direction
-            let value_max = 50;
+            let value_max = 100;
             // filtering strength
             let exp = 1.33;
             // process negative tilt as well, save original number sign
@@ -261,7 +260,10 @@
               y: filter(joystick_manager[0].frontPosition.y)
             }
           });
-        });
+        }
+
+        // Event listener for joystick movement
+        joystick_manager.on('move', sendJoystickControl);
         joystick_manager.on('end', function () {
           sendControl({
             joystick: { x: 0, y: 0 }
@@ -286,6 +288,108 @@
         lightsSwitch.addEventListener('change', function () {
           sendControl({ switches: { lights: lightsSwitch.checked } });
         });
+
+        // Joystick Keyboard Controls
+        window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener("keyup", handleKeyUp);
+
+        const joystickKeyState = {
+          w: false,
+          s: false,
+          a: false,
+          d: false,
+        };
+
+        const joystickSpeed = 1; // Adjust the speed as needed
+        const maxVelocity = 100; // Adjust the maximum velocity as needed
+        const acceleration = 0.75; // Adjust the acceleration as needed
+        const joystickRadius = 100; // Adjust the joystick radius as needed
+
+        let prevPosition = { x: 0, y: 0 };
+        let velocityX = 0;
+        let velocityY = 0;
+
+        function handleKeyDown(event) {
+          if (event.key in joystickKeyState) {
+            event.preventDefault();
+            joystickKeyState[event.key] = true;
+          }
+        }
+
+        function handleKeyUp(event) {
+          if (event.key in joystickKeyState) {
+            event.preventDefault();
+            joystickKeyState[event.key] = false;
+            // Reset velocity of the released joystick axis to zero
+            if (event.key === 'a' || event.key === 'd') {
+              velocityX = 0;
+            }
+            if (event.key === 'w' || event.key === 's') {
+              velocityY = 0;
+            }
+          }
+        }
+
+
+        function moveJoystick() {
+          const deltaX = (joystickKeyState.d ? 1 : 0) - (joystickKeyState.a ? 1 : 0);
+          const deltaY = (joystickKeyState.s ? 1 : 0) - (joystickKeyState.w ? 1 : 0);
+          if (!deltaX && !deltaY) {
+            // Reset velocity and joystick position when no keys are pressed
+            velocityX = 0;
+            velocityY = 0;
+          } else {
+            // Update velocity based on key presses
+            velocityX += deltaX * acceleration;
+            velocityY += deltaY * acceleration;
+
+            // Limit the velocity to the maximum value
+            velocityX = Math.min(Math.max(velocityX, -maxVelocity), maxVelocity);
+            velocityY = Math.min(Math.max(velocityY, -maxVelocity), maxVelocity);
+          }
+
+          // Update joystick position based on velocity
+          const newDeltaX = velocityX * joystickSpeed;
+          const newDeltaY = velocityY * joystickSpeed;
+
+          // Limit the joystick movement to a circle
+          const distance = Math.sqrt(newDeltaX ** 2 + newDeltaY ** 2);
+          let finalX = 0;
+          let finalY = 0;
+          if (distance > joystickRadius) {
+            const angle = Math.atan2(newDeltaY, newDeltaX);
+            const clampedX = joystickRadius * Math.cos(angle);
+            const clampedY = joystickRadius * Math.sin(angle);
+
+            finalX = clampedX;
+            finalY = clampedY;
+          } else {
+            finalX = newDeltaX;
+            finalY = newDeltaY;
+          }
+
+          const newPosition = { x: finalX, y: finalY };
+          // Check if the position has changed before sending an update
+          if (newPosition.x !== prevPosition.x || newPosition.y !== prevPosition.y) {
+            joystick_manager[0].frontPosition.x = finalX;
+            joystick_manager[0].frontPosition.y = finalY;
+
+            // this api is slow
+            //joystick_manager[0].setPosition(sendJoystickControl, { x: finalX, y: finalY });
+            // this hack is faster
+            joystick_manager[0].ui.front.style.transform = `translate(${finalX}px, ${finalY}px`;
+
+            sendJoystickControl();
+            // Update the previous position
+            prevPosition = newPosition;
+          }
+
+          // Use requestAnimationFrame for smoother updates
+          requestAnimationFrame(moveJoystick, 1);
+        }
+
+        // Start the loop
+        moveJoystick();
 
       });
     </script>
