@@ -59,7 +59,7 @@ async def websocket_endpoint(websocket: WebSocket):
     async def send_telemetry(ws=websocket):
         while True:
             await websocket.send_text(get_telemetry().model_dump_json())
-            await asyncio.sleep(0.100)
+            await asyncio.sleep(0.250)
 
     input_reset_killswitch_task = asyncio.create_task(input_reset_killswitch())
     send_telemetry_task = asyncio.create_task(send_telemetry())

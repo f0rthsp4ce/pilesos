@@ -10,6 +10,7 @@ import pigpio
 
 from pilesos.hardware.gpio import gpio
 from pilesos.hardware.pinout import WheelsPinout
+from pilesos.hardware.utils import value_map
 
 logger = getLogger(__name__)
 
@@ -21,19 +22,6 @@ class WheelController:
     IN2: int
     # some motors / drivers are connected backwards
     reversed: bool = False
-
-    @staticmethod
-    def value_map(value: int, min1: int, max1: int, min2: int, max2: int) -> int:
-        """Map one value range to another. Equivalent to Arduino Framework map() function.
-
-        Example:
-            # 0..255 -> -10..10
-            value_map(98, 0, 255, -10, 10)
-        """
-        left_span = max1 - min1
-        right_span = max2 - min2
-        value_scaled = float(value - min1) / float(left_span)
-        return round(min2 + (value_scaled * right_span))
 
     def __init__(self, EN: int, IN1: int, IN2: int, reversed: bool = False) -> None:
         """Initialize EN, IN1, IN2 pins and start PWM"""
@@ -76,7 +64,7 @@ class WheelController:
         gpio.set_PWM_dutycycle(
             user_gpio=self.EN,
             # map 0..100 to 1..255
-            dutycycle=self.value_map(abs(speed), 0, 100, 0, 255),
+            dutycycle=value_map(abs(speed), 0, 100, 0, 255),
         )
 
 

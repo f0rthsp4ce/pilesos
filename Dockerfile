@@ -1,7 +1,7 @@
 FROM python:3.12
 
 RUN apt update -y && apt upgrade -y
-RUN apt install -y v4l-utils
+RUN apt install -y v4l-utils i2c-tools
 
 COPY pilesos /app/pilesos
 ADD requirements.txt /app

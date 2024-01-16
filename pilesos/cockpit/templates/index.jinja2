@@ -171,7 +171,7 @@
       <table class="telemetry-table">
         <tr>
           <td>🔋 Battery:</td>
-          <td id="batteryIndicator">100%</td>
+          <td><span id="batteryVolts"></span> <span id="batteryPercent"></span></td>
         </tr>
         <tr>
           <td>🔌 Charging:</td>
@@ -208,7 +208,8 @@
         const lightsSwitch = document.getElementById('lightsSwitch');
 
         // Define telemetry elements
-        const batteryIndicator = document.getElementById('batteryIndicator');
+        const batteryVolts = document.getElementById('batteryVolts');
+        const batteryPercent = document.getElementById('batteryPercent');
 
         // Connect to the WebSocket server
         const socket = new WebSocket(`ws://${window.location.host}/ws`);
@@ -221,9 +222,10 @@
 
         // Telemetry receiver
         socket.addEventListener('message', function (event) {
-          // console.debug("recv: ", event.data);
+          console.debug("recv: ", event.data);
           const telemetry = JSON.parse(event.data);
-          batteryIndicator.textContent = `${telemetry.battery_percentage}%`;
+          batteryVolts.textContent = `${telemetry.battery_volts}V`;
+          batteryPercent.textContent = `${telemetry.battery_percent}%`;
         });
 
         // Initialize NippleJS
@@ -238,7 +240,7 @@
 
         function sendJoystickControl() {
           function filter(value) {
-            let speed_divisor = 2;
+            let speed_divisor = 1;
             // joystick max tilt in any direction
             let value_max = 100;
             // filtering strength
@@ -302,7 +304,7 @@
 
         const joystickSpeed = 1; // Adjust the speed as needed
         const maxVelocity = 100; // Adjust the maximum velocity as needed
-        const acceleration = 0.75; // Adjust the acceleration as needed
+        const acceleration = 2; // Adjust the acceleration as needed
         const joystickRadius = 100; // Adjust the joystick radius as needed
 
         let prevPosition = { x: 0, y: 0 };

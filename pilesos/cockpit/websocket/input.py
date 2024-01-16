@@ -1,10 +1,10 @@
 from logging import getLogger
 from random import choice, randint
-from tkinter.tix import Tree
-from typing import Annotated, get_type_hints
+from typing import Annotated
 
 from pydantic import BaseModel, Field, confloat
 
+from pilesos.hardware.camera import front_camera
 from pilesos.hardware.strip import (
     RGBW,
     ColorWipeEffect,
@@ -13,7 +13,6 @@ from pilesos.hardware.strip import (
     bumper_strip,
 )
 from pilesos.hardware.wheels import left_wheel_controller, right_wheel_controller
-from pilesos.hardware.camera import front_camera
 
 logger = getLogger(__name__)
 
@@ -90,3 +89,6 @@ async def process_websocket_input(user_input: WebsocketInput):
         else:
             effect = ColorWipeEffect(color=RGBW(0, 0, 0))
         await bumper_strip.set_effect(effect)
+    if user_input.buttons:
+        if user_input.buttons.camera_fix:
+            front_camera.apply_settings()
