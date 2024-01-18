@@ -1,4 +1,6 @@
-from pydantic import BaseModel
+from decimal import Decimal
+from typing import Annotated
+from pydantic import BaseModel, Field
 
 from pilesos.hardware.battery import get_battery
 from pilesos.hardware.bumper import left_bumper, right_bumper
@@ -6,7 +8,7 @@ from pilesos.hardware.bumper import left_bumper, right_bumper
 
 class WebsocketTelemetry(BaseModel):
     battery_percent: int
-    battery_volts: float
+    battery_volts: Annotated[Decimal, Field(decimal_places=1)]
     bumper_left: bool
     bumper_right: bool
 

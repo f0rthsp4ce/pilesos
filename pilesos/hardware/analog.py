@@ -33,3 +33,8 @@ class AnalogReader:
 
 
 pcf = PCF8591T(i2c_bus=1)
+
+a0 = AnalogReader(ain=PCF8591T.AIN.A0, pcf=pcf)
+a1 = AnalogReader(ain=PCF8591T.AIN.A1, pcf=pcf)
+a2 = AnalogReader(ain=PCF8591T.AIN.A2, pcf=pcf)
+a3 = AnalogReader(ain=PCF8591T.AIN.A3, pcf=pcf)
