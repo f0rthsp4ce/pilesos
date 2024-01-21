@@ -142,9 +142,6 @@ void loop()
         if (json_err)
         {
             output["error"] = json_err.c_str();
-            serializeJson(output, Serial);
-            Serial.println();
-            output.remove("error");
             return;
         }
         else
@@ -158,5 +155,6 @@ void loop()
         collect_telemetry();
         serializeJson(output, Serial);
         Serial.println();
+        output.remove("error");
     }
 }
