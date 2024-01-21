@@ -224,8 +224,8 @@
         socket.addEventListener('message', function (event) {
           console.debug("recv: ", event.data);
           const telemetry = JSON.parse(event.data);
-          batteryVolts.textContent = `${telemetry.battery_volts}V`;
-          batteryPercent.textContent = `${telemetry.battery_percent}%`;
+          batteryVolts.textContent = `${telemetry.battery.volts}V`;
+          batteryPercent.textContent = `${telemetry.battery.percent}%`;
         });
 
         // Initialize NippleJS
@@ -239,7 +239,7 @@
         });
 
         function sendJoystickControl() {
-          function filter(value) {
+          function filterJoystick(value) {
             let speed_divisor = 1;
             // joystick max tilt in any direction
             let value_max = 100;
@@ -256,20 +256,34 @@
             // restore original sign
             return orig_sign * limited / speed_divisor;
           }
-          sendControl({
-            joystick: {
-              x: filter(joystick_manager[0].frontPosition.x),
-              y: filter(joystick_manager[0].frontPosition.y)
-            }
-          });
+          function mapJoystickToTracks(joystickX, joystickY) {
+            // Convert (X, Y) from joystick to (L, R) throttles for each motor in two-track vehicle (tank, vacuum cleaner)
+            // nipplejs inverts joystick Y
+            joystickY = -joystickY;
+            const maxJoystickValue = 100;
+            const maxTrackThrottle = 255;
+
+            // Map joystick values to track throttles
+            const leftTrackThrottle = maxTrackThrottle * (joystickY + joystickX) / maxJoystickValue;
+            const rightTrackThrottle = maxTrackThrottle * (joystickY - joystickX) / maxJoystickValue;
+
+            // Ensure throttles are within the valid range
+            const clampedLeftTrackThrottle = Math.max(-maxTrackThrottle, Math.min(maxTrackThrottle, leftTrackThrottle));
+            const clampedRightTrackThrottle = Math.max(-maxTrackThrottle, Math.min(maxTrackThrottle, rightTrackThrottle));
+
+            return [Math.round(clampedLeftTrackThrottle), Math.round(clampedRightTrackThrottle)];
+          }
+
+          let x = joystick_manager[0].frontPosition.x;
+          let y = joystick_manager[0].frontPosition.y;
+          let [left, right] = mapJoystickToTracks(filterJoystick(x), filterJoystick(y))
+          sendControl({ wheels: { left: left, right: right } });
         }
 
         // Event listener for joystick movement
         joystick_manager.on('move', sendJoystickControl);
         joystick_manager.on('end', function () {
-          sendControl({
-            joystick: { x: 0, y: 0 }
-          });
+          sendControl({ wheels: { left: 0, right: 0 } });
         });
 
         // Button events
@@ -332,8 +346,7 @@
           }
         }
 
-
-        function moveJoystick() {
+        function moveJoystickWithKeyboard() {
           const deltaX = (joystickKeyState.d ? 1 : 0) - (joystickKeyState.a ? 1 : 0);
           const deltaY = (joystickKeyState.s ? 1 : 0) - (joystickKeyState.w ? 1 : 0);
           if (!deltaX && !deltaY) {
@@ -387,11 +400,11 @@
           }
 
           // Use requestAnimationFrame for smoother updates
-          requestAnimationFrame(moveJoystick, 1);
+          requestAnimationFrame(moveJoystickWithKeyboard, 1);
         }
 
         // Start the loop
-        moveJoystick();
+        moveJoystickWithKeyboard();
 
       });
     </script>

@@ -2,17 +2,19 @@ version: '3'
 
 services:
   
-  pilesos:
-    build: .
-    container_name: pilesos
+  cockpit:
+    build: cockpit
+    container_name: cockpit
     # live code reload
     volumes:
-      - ./pilesos:/app/pilesos
+      - ./cockpit:/opt/cockpit
     ports:
       - "80:8000"
     devices:
-      - /dev/ttyAMA1
-
+      - /dev/ttyUSB0
+    environment:
+      - CHASSIS_PORT=/dev/ttyUSB0
+  
   ustreamer:
     container_name: ustreamer
     image: pikvm/ustreamer:latest

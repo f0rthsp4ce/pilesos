@@ -9,21 +9,15 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from pilesos.cockpit.websocket.input import (
-    Buttons,
-    Joystick,
-    WebsocketInput,
-    process_websocket_input,
-)
-from pilesos.cockpit.websocket.telemetry import get_telemetry
+from cockpit import chassis
 
 logger = getLogger(__name__)
 
 fastapi_app = FastAPI()
-templates = Jinja2Templates(directory="pilesos/cockpit/templates")
+templates = Jinja2Templates(directory="cockpit/templates")
 
 # css, js, jpg files
-fastapi_app.mount("/static", StaticFiles(directory="pilesos/cockpit/static"))
+fastapi_app.mount("/static", StaticFiles(directory="cockpit/static"))
 
 
 # main page
@@ -47,19 +41,16 @@ async def websocket_endpoint(websocket: WebSocket):
             ):
                 # if there is no input from the user for >=1 second, then turn off motors, buzzers, etc.
                 # this prevents the robot from deadmoving into something when the signal is lost.
-                await process_websocket_input(
-                    WebsocketInput(
-                        joystick=Joystick(x=0, y=0),
-                        buttons=Buttons(buzzer=False),
-                    )
+                chassis.send_to_hardware(
+                    chassis.Input(wheels=chassis.Wheels(left=0, right=0))
                 )
                 logger.debug("no input, resetting.")
             await asyncio.sleep(1)
 
     async def send_telemetry(ws=websocket):
         while True:
-            await websocket.send_text(get_telemetry().model_dump_json())
-            await asyncio.sleep(0.250)
+            await websocket.send_text(chassis.get_telemetry())
+            await asyncio.sleep(0.01)
 
     input_reset_killswitch_task = asyncio.create_task(input_reset_killswitch())
     send_telemetry_task = asyncio.create_task(send_telemetry())
@@ -69,9 +60,9 @@ async def websocket_endpoint(websocket: WebSocket):
             data = await websocket.receive_text()
             logger.debug(data)
             # parse and validate it
-            user_input = WebsocketInput(**json.loads(data))
+            input = chassis.Input(**json.loads(data))
             # update motors, buzzers, lights, etc
-            await process_websocket_input(user_input)
+            chassis.send_to_hardware(input)
             # reset killswitch, input is received
             last_received_input = datetime.now()
     except WebSocketDisconnect:
