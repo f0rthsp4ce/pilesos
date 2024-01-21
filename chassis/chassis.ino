@@ -122,12 +122,13 @@ void collect_telemetry()
     int raw_bat_adc = analogRead(BATTERY_VOLTAGE_PIN);
     float adc_v = mapfloat(raw_bat_adc, 0, 1023, 0.0, ADC_INPUT_MAX_V);
     float bat_v = adc_v * (BATTERY_MAX_V / ADC_INPUT_MAX_V);
-    int percent = 100 - ((BATTERY_FULL_V - bat_v) / (BATTERY_FULL_V - BATTERY_EMPTY_V) * 100);
+    float volts = ((int)(bat_v * 10)) / 10.0; // leave only 1 decimal place
+    int percent = 100 - ((BATTERY_FULL_V - volts) / (BATTERY_FULL_V - BATTERY_EMPTY_V) * 100);
     if (percent < 0)
         percent = 0;
     output["battery"]["raw_adc"] = raw_bat_adc;
     output["battery"]["adc_v"] = adc_v;
-    output["battery"]["volts"] = bat_v;
+    output["battery"]["volts"] = volts;
     output["battery"]["percent"] = percent;
 }
 
@@ -150,7 +151,7 @@ void loop()
         }
     }
 
-    if (millis() % 250 == 0)
+    if (millis() % 100 == 0)
     {
         collect_telemetry();
         serializeJson(output, Serial);
