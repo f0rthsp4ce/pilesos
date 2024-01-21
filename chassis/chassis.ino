@@ -43,7 +43,7 @@ telemetry to be sent back (optionally with error message).
     "battery": {
         "raw_adc": int [0..1023],
         "adc_v": float,
-        "voltage": float,
+        "volts": float,
         "percent": int [0-100]
     }
 }
@@ -127,7 +127,7 @@ void collect_telemetry()
         percent = 0;
     output["battery"]["raw_adc"] = raw_bat_adc;
     output["battery"]["adc_v"] = adc_v;
-    output["battery"]["voltage"] = bat_v;
+    output["battery"]["volts"] = bat_v;
     output["battery"]["percent"] = percent;
 }
 
