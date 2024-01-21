@@ -11,11 +11,12 @@
 #define FRONT_STRIP_DATA_PIN 13
 #define FRONT_STRIP_NUM_LEDS 27
 
-// ARDUINO ADC
-#define ADC_INPUT_MAX_V 4.715 // max ADC value
-// BATTERY
-#define BATTERY_VOLTAGE_PIN A0          // connect to output of voltage divider
-#define BATTERY_VOLTAGE_DIVIDER_RATIO 6 // voltage divider ratio 10k + 50k = 6
+// BATTERY & ADC
+#define BATTERY_EMPTY_V 22.2
+#define BATTERY_FULL_V 25.2    // 6S
+#define BATTERY_MAX_V 30       // voltage divider should reduce it to ADC_INPUT_MAX_V
+#define ADC_INPUT_MAX_V 4.715  // max ADC value, measure yourself
+#define BATTERY_VOLTAGE_PIN A0 // connect to output of voltage divider
 
 /*
 hardware control input.
@@ -28,8 +29,8 @@ hardware control input.
         int [0..255]
     ],
     "wheels": {
-        "left": int[-255..255],
-        "right": int[-255..255]
+        "left": int [-255..255],
+        "right": int [-255..255]
     }
 }
 */
@@ -41,8 +42,9 @@ telemetry to be sent back (optionally with error message).
     "error": string,
     "battery": {
         "raw_adc": int [0..1023],
-        "raw_v": float,
+        "adc_v": float,
         "voltage": float,
+        "percent": int [0-100]
     }
 }
 */
@@ -118,11 +120,15 @@ void collect_telemetry()
 {
     // read battery voltage
     int raw_bat_adc = analogRead(BATTERY_VOLTAGE_PIN);
+    float adc_v = mapfloat(raw_bat_adc, 0, 1023, 0.0, ADC_INPUT_MAX_V);
+    float bat_v = adc_v * (BATTERY_MAX_V / ADC_INPUT_MAX_V);
+    int percent = 100 - ((BATTERY_FULL_V - bat_v) / (BATTERY_FULL_V - BATTERY_EMPTY_V) * 100);
+    if (percent < 0)
+        percent = 0;
     output["battery"]["raw_adc"] = raw_bat_adc;
-    float raw_v = mapfloat(raw_bat_adc, 0, 1023, 0.0, ADC_INPUT_MAX_V);
-    output["battery"]["raw_v"] = raw_v;
-    float bat_v = raw_v * 6.0;
+    output["battery"]["adc_v"] = adc_v;
     output["battery"]["voltage"] = bat_v;
+    output["battery"]["percent"] = percent;
 }
 
 void loop()
