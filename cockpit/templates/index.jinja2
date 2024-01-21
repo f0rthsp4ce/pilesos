@@ -19,6 +19,7 @@
       --active: white;
       --text: white;
       --container: #222;
+      --battery: #6cff6c;
     }
 
     html {
@@ -101,7 +102,20 @@
     }
 
     .telemetry-table td {
-      min-width: 2rem;
+      min-width: 6rem;
+
+    }
+
+    #batteryProgressbarContainer {
+      border: 1px solid var(--battery);
+      padding: 1px;
+    }
+
+    #batteryProgressbar {
+      display: block;
+      background-color: var(--battery);
+      height: 0.5rem;
+      width: 0;
     }
 
     /* Button colors */
@@ -174,9 +188,14 @@
           <td><span id="batteryVolts"></span> <span id="batteryPercent"></span></td>
         </tr>
         <tr>
+          <td id="batteryProgressbarContainer" colspan="2">
+            <div id="batteryProgressbar"></div>
+          </td>
+        </tr>
+        {# <tr>
           <td>🔌 Charging:</td>
           <td id="chargingIndcator">No</td>
-        </tr>
+        </tr> #}
       </table>
     </div>
 
@@ -210,6 +229,7 @@
         // Define telemetry elements
         const batteryVolts = document.getElementById('batteryVolts');
         const batteryPercent = document.getElementById('batteryPercent');
+        const batteryProgressbar = document.getElementById('batteryProgressbar');
 
         // Connect to the WebSocket server
         const socket = new WebSocket(`ws://${window.location.host}/ws`);
@@ -226,6 +246,7 @@
           const telemetry = JSON.parse(event.data);
           batteryVolts.textContent = `${telemetry.battery.volts}V`;
           batteryPercent.textContent = `${telemetry.battery.percent}%`;
+          batteryProgressbar.style.width = `${telemetry.battery.percent}%`;
         });
 
         // Initialize NippleJS
