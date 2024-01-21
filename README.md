@@ -22,6 +22,7 @@
 
     ```bash
     cd chassis
+    make deps
     make flash
     ```
 
