@@ -1,50 +1,38 @@
 # PiLesos
 
-hardware hacked vacuum cleaner.
+~~hardware hacked~~ rebuilt vacuum cleaner.
 
 ## components
 
-### raspberry pi 3b+
-
-- [arch linux arm](https://archlinuxarm.org/platforms/armv8/broadcom/raspberry-pi-3) — lightweight and fast distro (optional)
-- docker compose — one command build & deploy
-
-### software (dockerized)
-
-most images are alpine based.
-
-- cockpit
-    - [fastapi](https://fastapi.tiangolo.com/) — web server for HTML and REST API
-    - [fastapi websockets](https://fastapi.tiangolo.com/advanced/websockets/) — realtime input sending
-    - [nipplejs](https://www.npmjs.com/package/nipplejs) — vanilla js joystick
-    - [rpi-ws281x](https://github.com/rpi-ws281x/rpi-ws281x-python) — library for RGB strip
+**cockpit (raspberry pi)** — web robot control, sends command to chassis over uart, streams rpi camera over http.
+- [fastapi](https://fastapi.tiangolo.com/) — web server for HTML and REST API
+- [fastapi websockets](https://fastapi.tiangolo.com/advanced/websockets/) — realtime input sending
+- [nipplejs](https://www.npmjs.com/package/nipplejs) — vanilla js joystick
 - [ustreamer](https://github.com/pikvm/ustreamer) — fast webcam streaming
-- [pigpiod](https://abyz.me.uk/rpi/pigpio/python.html) — gpio daemon to control several independent PWM generators
 
-### hardware
+**chassis (arduino nano)** — receives json over uart and controls all the hardware
+- [ArduinoJson](https://arduinojson.org/) — fast input/output parsing
+- [FastLED](https://fastled.io/) — led strip control
 
-- disassembled vacuum cleaner robot.
-- L298N motor driver.
-- 18650 batteries + BMS.
-- several voltage converters.
-- WS2818B led strip.
+## build & deploy
 
-## control chain
+- arduino chassis firmware build:
 
-state of all controls → json → websocket.
+    install `arduino-cli`, connect arduino nano.
 
-`browser → pilesos.server → pilesos.websocket.input → pilesos.hardware → pigpiod → [gpio] → [motor driver]`
+    ```bash
+    cd chassis
+    make flash
+    ```
 
-## telemetry chain
+- raspberry pi cockpit deploy:
 
-telemetry is sent every 100ms.
+    ```bash
+    cd cockpit
+    docker compose up -d
+    ```
 
-`browser ← pilesos.server ← pilesos.websocket.telemetry ← pilesos.hardware ← pigpiod ← [gpio] ← [sensor pins]`
+## required hardware
 
-## deploy
-
-```bash
-git clone https://github.com/f0rthsp4ce/pilesos
-cd pilesos
-docker compose up -d
-```
+- raspberry pi 3 / 4
+- arduino nano / leonardo (any board w/ 10-bit adc for precise battery reading)

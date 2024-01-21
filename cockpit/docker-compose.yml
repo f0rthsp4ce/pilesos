@@ -11,15 +11,8 @@ services:
     ports:
       - "80:8000"
     devices:
-      # camera v4l controls
-      - /dev/video0
-      # direct gpio controls for event triggering and rgb strip
-      - /dev/gpiochip0
-      - /dev/gpiomem
-      # direct i2c control for pcf8591
-      - /dev/i2c-0
-    privileged: true
-  
+      - /dev/ttyAMA1
+
   ustreamer:
     container_name: ustreamer
     image: pikvm/ustreamer:latest
@@ -37,13 +30,3 @@ services:
     devices:
       - /dev/video0
     stop_grace_period: 1s
-    
-  pigpiod:
-    container_name: pigpiod
-    image: zinen2/alpine-pigpiod:latest
-    entrypoint: pigpiod -g -a 1 -s 10
-    ports:
-      - 8888
-    devices: 
-      - /dev/gpiochip0
-    privileged: true
