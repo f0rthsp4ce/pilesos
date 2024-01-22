@@ -23,11 +23,7 @@ hardware control input.
 - root fields = optional (you may only update one hardware entity)
 - nested fields = mandatory.
 {
-    "front_strip":[
-        int [0..255],
-        int [0..255],
-        int [0..255]
-    ],
+    "front_strip": "FF00FF",
     "wheels": {
         "left": int [-255..255],
         "right": int [-255..255]
@@ -98,12 +94,9 @@ void update_hardware()
     // set led strip color
     if (input["front_strip"])
     {
-        uint8_t r = input["front_strip"][0];
-        uint8_t g = input["front_strip"][1];
-        uint8_t b = input["front_strip"][2];
         for (int i = 0; i < FRONT_STRIP_NUM_LEDS; i++)
         {
-            front_strip_leds[i] = CRGB(r, g, b);
+            front_strip_leds[i] = strtol(input["front_strip"], NULL, 0);
             FastLED.show();
         }
     }
