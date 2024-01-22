@@ -5,165 +5,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>Robot Control</title>
-  <!-- Include NippleJS -->
-  <script src="/static/nipplejs.js"></script>
-
-  <!-- Reset CSS -->
   <link rel="stylesheet" href="/static/normalize.css">
-  <style>
-    /* colors */
-    :root {
-      --bg: black;
-      --accent: white;
-      --secondary: gray;
-      --active: white;
-      --text: white;
-      --container: #222;
-      --battery: #6cff6c;
-    }
-
-    html {
-      background-color: var(--bg);
-      color: var(--text);
-      font-family: monospace;
-    }
-
-    /* typography */
-    .text {
-      padding-left: 0.5rem;
-    }
-
-    .secondary {
-      color: var(--secondary)
-    }
-
-    /* control islands */
-    .control-container {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: flex-start;
-    }
-
-    .control-block {
-      flex: 1;
-      background-color: var(--container);
-      padding: 0.5rem;
-      border-radius: 0.5rem;
-      margin: 0.5rem;
-    }
-
-    /* Button style */
-    button,
-    input,
-    label.checkbox-button {
-      display: inline-block;
-      font-size: large;
-      border: 2px solid;
-      border-radius: 0.5rem;
-      padding: 0.5rem;
-      margin: 0.25rem;
-      text-wrap: nowrap;
-    }
-
-    /* Checkbox button */
-    input[type="checkbox"] {
-      display: none;
-    }
-
-    label.checkbox-button {
-      cursor: pointer;
-    }
-
-    /* controls placement */
-    #camera {
-      width: 100%;
-      min-width: 60vw;
-      max-width: 100%;
-      max-height: 70vw;
-    }
-
-
-    .joystick-box {
-      display: flex;
-      min-height: 20rem;
-      min-width: 20rem;
-      justify-content: center;
-      align-items: center;
-    }
-
-
-    #joystick {
-      position: relative;
-    }
-
-    /* telemetry style */
-    .telemetry-table {
-      min-width: max-content;
-    }
-
-    .telemetry-table td {
-      min-width: 6rem;
-
-    }
-
-    #batteryProgressbarContainer {
-      border: 1px solid var(--battery);
-      padding: 1px;
-    }
-
-    #batteryProgressbar {
-      display: block;
-      background-color: var(--battery);
-      height: 0.5rem;
-      width: 0;
-    }
-
-    /* Button colors */
-    button,
-    input,
-    label.checkbox-button {
-      color: var(--accent);
-      background-color: var(--bg);
-      border-color: var(--accent);
-      text-align: center;
-    }
-
-    button:active {
-      border-color: var(--active);
-      color: var(--bg);
-      background-color: var(--active);
-    }
-
-    /* Checkbox button colors */
-    label.checkbox-button {
-      border-color: var(--secondary);
-    }
-
-    /* Change button color when checkbox is checked */
-    input[type="checkbox"]:checked+label.checkbox-button {
-      background-color: var(--accent);
-      color: var(--bg);
-      border-color: var(--accent);
-    }
-
-    /* prevent mobile browsers from selecting text when using joystick and controls */
-    * {
-      -webkit-user-select: none !important;
-      -ms-user-select: none !important;
-      -moz-user-select: none !important;
-      user-select: none !important;
-      -webkit-touch-callout: none !important;
-      -webkit-user-drag: none !important;
-      touch-action: manipulation;
-    }
-  </style>
+  <link rel="stylesheet" href="/static/main.css">
+  <script src="/static/nipplejs.js"></script>
 </head>
 
 <body>
-
-
-
-
   <div class="control-container">
 
     <div class="control-block">
@@ -171,265 +18,41 @@
     </div>
 
     <div class="control-block">
+      <h3>u see me rollin<div class="kbd-hint"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></div>
+      </h3>
       <div id="joystick" class="joystick-box">
       </div>
+
     </div>
 
     <div class="control-block">
-      <button id="cameraFixButton">🎥 Fix</button>
+      <button id="cameraFixButton">beep <kbd>B</kbd></button>
       <input type="checkbox" id="lightsSwitch">
-      <label for="lightsSwitch" class="checkbox-button">💡 Light</label>
+      <label for="lightsSwitch" class="checkbox-button">light <kbd>L</kbd></label>
+
     </div>
 
     <div class="control-block">
-      <table class="telemetry-table">
-        <tr>
-          <td>🔋 Battery:</td>
-          <td><span id="batteryVolts"></span> <span id="batteryPercent"></span></td>
-        </tr>
-        <tr>
-          <td id="batteryProgressbarContainer" colspan="2">
-            <div id="batteryProgressbar"></div>
-          </td>
-        </tr>
-        {# <tr>
-          <td>🔌 Charging:</td>
-          <td id="chargingIndcator">No</td>
-        </tr> #}
-      </table>
+      <h3>battery </h3>
+      <div id="batteryProgressbarContainer">
+        <div id="batteryProgressbar"></div></span>
+      </div>
+      </span><span id="batteryVolts"></span> <span id="batteryPercent"></span>
     </div>
-
 
     <div class="control-block">
       <div class="text">
-        <h2>PiLesos control panel</h2>
-        <p class="secondary">⚠️ Due to very nature of hacked devices, they may behave unexpectedly. You
+        <p class="secondary">Due to very nature of hacked devices, they may behave unexpectedly. You
           are warned.
         </p>
       </div>
     </div>
 
+    <script src="/static/control.js"></script>
     <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        // Update camera stream url
-        document.getElementById("camera").src = `http://${window.location.host}:8001/stream`
-
-        // Function to send the whole state of inputs to the server
-        function sendControl(control) {
-          const payload = JSON.stringify(control);
-          console.debug("sent: ", payload);
-          socket.send(payload);
-        }
-
-        // Define control elements
-        const joystick = document.getElementById('joystick');
-        const cameraFixButton = document.getElementById('cameraFixButton');
-        const lightsSwitch = document.getElementById('lightsSwitch');
-
-        // Define telemetry elements
-        const batteryVolts = document.getElementById('batteryVolts');
-        const batteryPercent = document.getElementById('batteryPercent');
-        const batteryProgressbar = document.getElementById('batteryProgressbar');
-
-        // Connect to the WebSocket server
-        const socket = new WebSocket(`ws://${window.location.host}/ws`);
-        socket.addEventListener('error', function (event) {
-          console.error('WebSocket error:', event);
-        });
-        window.addEventListener('unload', function () {
-          socket.close();
-        });
-
-        // Telemetry receiver
-        socket.addEventListener('message', function (event) {
-          console.debug("recv: ", event.data);
-          const telemetry = JSON.parse(event.data);
-          batteryVolts.textContent = `${telemetry.battery.volts}V`;
-          batteryPercent.textContent = `${telemetry.battery.percent}%`;
-          batteryProgressbar.style.width = `${telemetry.battery.percent}%`;
-        });
-
-        // Initialize NippleJS
-        const joystick_manager = nipplejs.create({
-          zone: document.getElementById("joystick"),
-          mode: 'static',
-          color: getComputedStyle(document.documentElement).getPropertyValue('--accent'),
-          restJoystick: true,
-          dynamicPage: true,
-          size: 200,
-        });
-
-        function sendJoystickControl() {
-          function filterJoystick(value) {
-            let speed_divisor = 1;
-            // joystick max tilt in any direction
-            let value_max = 100;
-            // filtering strength
-            let exp = 1.33;
-            // process negative tilt as well, save original number sign
-            let orig_sign = Math.sign(value);
-            value = Math.abs(value);
-            // calculate filtered value
-            let powed = Math.pow(value, exp) || 0;
-            // limit to original range of values
-            let pow_maximum = Math.pow(value_max, exp);
-            let limited = powed / pow_maximum * value_max;
-            // restore original sign
-            return orig_sign * limited / speed_divisor;
-          }
-          function mapJoystickToTracks(joystickX, joystickY) {
-            // Convert (X, Y) from joystick to (L, R) throttles for each motor in two-track vehicle (tank, vacuum cleaner)
-            // nipplejs inverts joystick Y
-            joystickY = -joystickY;
-            const maxJoystickValue = 100;
-            const maxTrackThrottle = 255;
-
-            // Map joystick values to track throttles
-            const leftTrackThrottle = maxTrackThrottle * (joystickY + joystickX) / maxJoystickValue;
-            const rightTrackThrottle = maxTrackThrottle * (joystickY - joystickX) / maxJoystickValue;
-
-            // Ensure throttles are within the valid range
-            const clampedLeftTrackThrottle = Math.max(-maxTrackThrottle, Math.min(maxTrackThrottle, leftTrackThrottle));
-            const clampedRightTrackThrottle = Math.max(-maxTrackThrottle, Math.min(maxTrackThrottle, rightTrackThrottle));
-
-            return [Math.round(clampedLeftTrackThrottle), Math.round(clampedRightTrackThrottle)];
-          }
-
-          let x = joystick_manager[0].frontPosition.x;
-          let y = joystick_manager[0].frontPosition.y;
-          let [left, right] = mapJoystickToTracks(filterJoystick(x), filterJoystick(y))
-          sendControl({ wheels: { left: left, right: right } });
-        }
-
-        // Event listener for joystick movement
-        joystick_manager.on('move', sendJoystickControl);
-        joystick_manager.on('end', function () {
-          sendControl({ wheels: { left: 0, right: 0 } });
-        });
-
-        // Button events
-        function cameraFixButtonPress() {
-          cameraFixButton.classList.add('active');
-          sendControl({ buttons: { camera_fix: true } });
-        }
-        function cameraFixButtonRelease() {
-          cameraFixButton.classList.remove('active');
-          sendControl({ buttons: { camera_fix: false } });
-        }
-        cameraFixButton.addEventListener('mousedown', cameraFixButtonPress);
-        cameraFixButton.addEventListener('touchstart', cameraFixButtonPress);
-        cameraFixButton.addEventListener('mouseup', cameraFixButtonRelease);
-        cameraFixButton.addEventListener('touchend', cameraFixButtonRelease);
-
-        // Switches events
-        lightsSwitch.addEventListener('change', function () {
-          sendControl({ switches: { lights: lightsSwitch.checked } });
-        });
-
-        // Joystick Keyboard Controls
-        window.addEventListener("keydown", handleKeyDown);
-        window.addEventListener("keyup", handleKeyUp);
-
-        const joystickKeyState = {
-          w: false,
-          s: false,
-          a: false,
-          d: false,
-        };
-
-        const joystickSpeed = 1; // Adjust the speed as needed
-        const maxVelocity = 100; // Adjust the maximum velocity as needed
-        const acceleration = 2; // Adjust the acceleration as needed
-        const joystickRadius = 100; // Adjust the joystick radius as needed
-
-        let prevPosition = { x: 0, y: 0 };
-        let velocityX = 0;
-        let velocityY = 0;
-
-        function handleKeyDown(event) {
-          if (event.key in joystickKeyState) {
-            event.preventDefault();
-            joystickKeyState[event.key] = true;
-          }
-        }
-
-        function handleKeyUp(event) {
-          if (event.key in joystickKeyState) {
-            event.preventDefault();
-            joystickKeyState[event.key] = false;
-            // Reset velocity of the released joystick axis to zero
-            if (event.key === 'a' || event.key === 'd') {
-              velocityX = 0;
-            }
-            if (event.key === 'w' || event.key === 's') {
-              velocityY = 0;
-            }
-          }
-        }
-
-        function moveJoystickWithKeyboard() {
-          const deltaX = (joystickKeyState.d ? 1 : 0) - (joystickKeyState.a ? 1 : 0);
-          const deltaY = (joystickKeyState.s ? 1 : 0) - (joystickKeyState.w ? 1 : 0);
-          if (!deltaX && !deltaY) {
-            // Reset velocity and joystick position when no keys are pressed
-            velocityX = 0;
-            velocityY = 0;
-          } else {
-            // Update velocity based on key presses
-            velocityX += deltaX * acceleration;
-            velocityY += deltaY * acceleration;
-
-            // Limit the velocity to the maximum value
-            velocityX = Math.min(Math.max(velocityX, -maxVelocity), maxVelocity);
-            velocityY = Math.min(Math.max(velocityY, -maxVelocity), maxVelocity);
-          }
-
-          // Update joystick position based on velocity
-          const newDeltaX = velocityX * joystickSpeed;
-          const newDeltaY = velocityY * joystickSpeed;
-
-          // Limit the joystick movement to a circle
-          const distance = Math.sqrt(newDeltaX ** 2 + newDeltaY ** 2);
-          let finalX = 0;
-          let finalY = 0;
-          if (distance > joystickRadius) {
-            const angle = Math.atan2(newDeltaY, newDeltaX);
-            const clampedX = joystickRadius * Math.cos(angle);
-            const clampedY = joystickRadius * Math.sin(angle);
-
-            finalX = clampedX;
-            finalY = clampedY;
-          } else {
-            finalX = newDeltaX;
-            finalY = newDeltaY;
-          }
-
-          const newPosition = { x: finalX, y: finalY };
-          // Check if the position has changed before sending an update
-          if (newPosition.x !== prevPosition.x || newPosition.y !== prevPosition.y) {
-            joystick_manager[0].frontPosition.x = finalX;
-            joystick_manager[0].frontPosition.y = finalY;
-
-            // this api is slow
-            //joystick_manager[0].setPosition(sendJoystickControl, { x: finalX, y: finalY });
-            // this hack is faster
-            joystick_manager[0].ui.front.style.transform = `translate(${finalX}px, ${finalY}px`;
-
-            sendJoystickControl();
-            // Update the previous position
-            prevPosition = newPosition;
-          }
-
-          // Use requestAnimationFrame for smoother updates
-          requestAnimationFrame(moveJoystickWithKeyboard, 1);
-        }
-
-        // Start the loop
-        moveJoystickWithKeyboard();
-
-      });
+      // Update camera stream url
+      document.getElementById("camera").src = `http://${window.location.host}:8001/stream`
     </script>
-
 </body>
 
 </html>
