@@ -12,11 +12,10 @@
 #define FRONT_STRIP_NUM_LEDS 27
 
 // BATTERY & ADC
-#define BATTERY_EMPTY_V 22.2
-#define BATTERY_FULL_V 25.2    // 6S
-#define BATTERY_MAX_V 30       // voltage divider should reduce it to ADC_INPUT_MAX_V
-#define ADC_INPUT_MAX_V 4.715  // max ADC value, measure yourself
 #define BATTERY_VOLTAGE_PIN A0 // connect to output of voltage divider
+#define BATTERY_EMPTY_V 22.2
+#define BATTERY_FULL_V 25.2 // 6S
+#define BATTERY_MAX_V 30    // voltage divider should reduce it to max ADC value (1023)
 
 /*
 hardware control input.
@@ -113,14 +112,12 @@ void collect_telemetry()
 {
     // read battery voltage
     int raw_bat_adc = analogRead(BATTERY_VOLTAGE_PIN);
-    float adc_v = mapfloat(raw_bat_adc, 0, 1023, 0.0, ADC_INPUT_MAX_V);
-    float bat_v = adc_v * (BATTERY_MAX_V / ADC_INPUT_MAX_V);
+    float bat_v = mapfloat(raw_bat_adc, 0, 1023, 0.0, BATTERY_MAX_V);
     float volts = ((int)(bat_v * 10)) / 10.0; // leave only 1 decimal place
     int percent = 100 - ((BATTERY_FULL_V - volts) / (BATTERY_FULL_V - BATTERY_EMPTY_V) * 100);
     if (percent < 0)
         percent = 0;
     output["battery"]["raw_adc"] = raw_bat_adc;
-    output["battery"]["adc_v"] = adc_v;
     output["battery"]["volts"] = volts;
     output["battery"]["percent"] = percent;
 }
