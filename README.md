@@ -29,7 +29,9 @@
 - raspberry pi cockpit deploy:
 
     ```bash
+    apt install docker.io docker-compose
     cd cockpit
+    export DOCKER_BUILDKIT=1
     docker compose up -d
     ```
 
