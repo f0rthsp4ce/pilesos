@@ -12,9 +12,11 @@
   --active: white;
   --text: white;
   --container: #111;
-  --battery-full: greenyellow;
+  --battery-full: #00ff00;
   --battery-low: red;
-  --kbd-bg: #222;
+  --battery-overcharge: #ffea00;
+  --kbd-bg: #00000088;
+  --kbd-text: #ffffff88;
 }
 
 html {
@@ -37,10 +39,11 @@ html {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
+  flex-flow: wrap;
 }
 
 .control-block {
-  flex: 1;
+  min-width: 16rem;
   background-color: var(--container);
   padding: 0.5rem;
   border-radius: 0.5rem;
@@ -74,16 +77,14 @@ label.checkbox-button {
 
 /* controls placement */
 #camera {
-  width: 100%;
-  min-width: 60vw;
-  max-width: 100%;
-  max-height: 70vw;
+  height: 80vh;
+  object-fit: contain;
 }
 
 .joystick-box {
   display: flex;
-  min-height: 20rem;
-  min-width: 20rem;
+  min-height: 16rem;
+  min-width: 16rem;
   justify-content: center;
   align-items: center;
 }
@@ -114,6 +115,7 @@ label.checkbox-button {
   background-color: var(--battery);
   height: 0.5rem;
   width: 0;
+  transition: all 0.2s;
 }
 
 /* keyboard shortcut indicator */
@@ -122,11 +124,12 @@ label.checkbox-button {
 }
 kbd {
   background-color: var(--kbd-bg);
-  color: var(--secondary);
+  color: var(--kbd-text);
   padding-left: 0.25rem;
   padding-right: 0.25rem;
   font-size: small;
   margin: 0.1rem;
+  border-radius: 0.2rem;
 }
 
 /* Button colors */

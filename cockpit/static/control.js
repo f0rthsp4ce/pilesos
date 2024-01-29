@@ -22,30 +22,34 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Telemetry receiver
   socket.addEventListener("message", function (event) {
-    //console.debug("recv: ", event.data);
+    console.info("recv: ", event.data);
     const telemetry = JSON.parse(event.data);
     batteryVolts.textContent = `${telemetry.battery.volts.toFixed(1)}V`;
     batteryPercent.textContent = `${telemetry.battery.percent}%`;
     batteryProgressbar.style.width = `${telemetry.battery.percent}%`;
 
     // update colors
-    var style = getComputedStyle(document.body);
-    if (telemetry.battery.percent < 20) {
-      document.documentElement.style.setProperty(
-        "--battery",
-        style.getPropertyValue("--battery-low")
-      );
-    } else {
-      document.documentElement.style.setProperty(
-        "--battery",
-        style.getPropertyValue("--battery-full")
-      );
+    let p = telemetry.battery.percent;
+    let c = "--battery-unknown";
+    switch (true) {
+      case (p < 20):
+        c = "--battery-low"
+        break;
+      case (p > 100):
+        c = "--battery-overcharge"
+        break
+      default:
+        c = "--battery-full"
     }
+    document.documentElement.style.setProperty(
+      "--battery",
+      getComputedStyle(document.body).getPropertyValue(c)
+    );
   });
 
   // Define control elements
   const joystick = document.getElementById("joystick");
-  const cameraFixButton = document.getElementById("cameraFixButton");
+  const beepButton = document.getElementById("beepButton");
   const lightsSwitch = document.getElementById("lightsSwitch");
 
   // Initialize NippleJS
@@ -86,11 +90,15 @@ document.addEventListener("DOMContentLoaded", function () {
       const maxTrackThrottle = 255;
 
       // Map joystick values to track throttles
-      const leftTrackThrottle =
+      let leftTrackThrottle =
         (maxTrackThrottle * (joystickY + joystickX)) / maxJoystickValue;
-      const rightTrackThrottle =
+      let rightTrackThrottle =
         (maxTrackThrottle * (joystickY - joystickX)) / maxJoystickValue;
-
+      
+      if (joystickY < 0) {
+        [leftTrackThrottle, rightTrackThrottle] = [rightTrackThrottle, leftTrackThrottle]
+      }
+      
       // Ensure throttles are within the valid range
       const clampedLeftTrackThrottle = Math.max(
         -maxTrackThrottle,
@@ -121,10 +129,6 @@ document.addEventListener("DOMContentLoaded", function () {
   joystick_manager.on("end", function () {
     sendControl({ wheels: { left: 0, right: 0 } });
   });
-
-  // Joystick Keyboard Controls
-  window.addEventListener("keydown", handleKeyDown);
-  window.addEventListener("keyup", handleKeyUp);
 
   const joystickKeyState = {
     w: false,
@@ -206,10 +210,43 @@ document.addEventListener("DOMContentLoaded", function () {
     requestAnimationFrame(moveJoystickWithKeyboard);
   }
 
+  socket.addEventListener("open", function () {
+    // start the loop
+    moveJoystickWithKeyboard();
+  });
+
+  // Button events
+  function beepButtonPress() {
+    beepButton.classList.add("active");
+    sendControl({ buttons: { beep: true } });
+  }
+  function beepButtonRelease() {
+    beepButton.classList.remove("active");
+    sendControl({ buttons: { beep: false } });
+  }
+  beepButton.addEventListener("mousedown", beepButtonPress);
+  beepButton.addEventListener("touchstart", beepButtonPress, {
+    passive: true,
+  });
+  beepButton.addEventListener("mouseup", beepButtonRelease);
+  beepButton.addEventListener("touchend", beepButtonRelease, {
+    passive: true,
+  });
+
+  // Switches events
+  lightsSwitch.addEventListener("change", function () {
+    sendControl({ switches: { lights: lightsSwitch.checked } });
+  });
+
+  // Keyboard controls
   function handleKeyDown(event) {
     if (event.key in joystickKeyState) {
       event.preventDefault();
       joystickKeyState[event.key] = true;
+    }
+    if (event.key == "b") {
+      event.preventDefault();
+      beepButtonPress();
     }
   }
 
@@ -225,32 +262,14 @@ document.addEventListener("DOMContentLoaded", function () {
         velocityY = 0;
       }
     }
+    if (event.key == "b") {
+      event.preventDefault();
+      beepButtonRelease();
+    }
   }
 
-  socket.addEventListener("open", function () {
-    moveJoystickWithKeyboard();
-  });
-
-  // Button events
-  function cameraFixButtonPress() {
-    cameraFixButton.classList.add("active");
-    sendControl({ buttons: { camera_fix: true } });
-  }
-  function cameraFixButtonRelease() {
-    cameraFixButton.classList.remove("active");
-    sendControl({ buttons: { camera_fix: false } });
-  }
-  cameraFixButton.addEventListener("mousedown", cameraFixButtonPress);
-  cameraFixButton.addEventListener("touchstart", cameraFixButtonPress, {
-    passive: true,
-  });
-  cameraFixButton.addEventListener("mouseup", cameraFixButtonRelease);
-  cameraFixButton.addEventListener("touchend", cameraFixButtonRelease, {
-    passive: true,
-  });
-
-  // Switches events
-  lightsSwitch.addEventListener("change", function () {
-    sendControl({ switches: { lights: lightsSwitch.checked } });
-  });
+  // Keyboard Controls
+  window.addEventListener("keydown", handleKeyDown);
+  window.addEventListener("keyup", handleKeyUp);
+  
 });
