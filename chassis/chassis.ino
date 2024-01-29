@@ -1,21 +1,29 @@
+#define ARDUINOJSON_USE_LONG_LONG 1
 #include <ArduinoJson.h>
 #include <FastLED.h>
 
 // WHEELS
-#define WHEEL_L_IN1_PIN 5
-#define WHEEL_L_IN2_PIN 9
-#define WHEEL_R_IN1_PIN 6
-#define WHEEL_R_IN2_PIN 10
+#define WHEEL_L_IN1_PIN 6
+#define WHEEL_L_IN2_PIN 10
+#define WHEEL_L_FEEDBACK_PIN 2
+#define WHEEL_R_IN1_PIN 5
+#define WHEEL_R_IN2_PIN 9
+#define WHEEL_R_FEEDBACK_PIN 3
+#define WHEEL_MAX_FEEDBACK
 
 // FRONT LED STRIP
 #define FRONT_STRIP_DATA_PIN 13
 #define FRONT_STRIP_NUM_LEDS 27
 
+// BUMPER
+#define BUMPER_L_PIN 7
+#define BUMPER_R_PIN 8
+
 // BATTERY & ADC
 #define BATTERY_VOLTAGE_PIN A0 // connect to output of voltage divider
-#define BATTERY_EMPTY_V 22.2
-#define BATTERY_FULL_V 25.2 // 6S
-#define BATTERY_MAX_V 30    // voltage divider should reduce it to max ADC value (1023)
+#define BATTERY_EMPTY_V 22
+#define BATTERY_FULL_V 25 // 6S
+#define BATTERY_MAX_V 30  // voltage divider should reduce it to max ADC value (1023)
 
 /*
 hardware control input.
@@ -40,6 +48,14 @@ telemetry to be sent back (optionally with error message).
         "adc_v": float,
         "volts": float,
         "percent": int [0-100]
+    },
+    "bumper": {
+        "left": bool,
+        "right", bool
+    },
+    "wheels_speed": {
+        "left": int
+        "right": int
     }
 }
 */
@@ -47,6 +63,17 @@ StaticJsonDocument<1024> output;
 
 // front led strip state
 CRGB front_strip_leds[FRONT_STRIP_NUM_LEDS];
+// wheels feedback
+uint64_t left_wheel_counter = 0;
+uint64_t right_wheel_counter = 0;
+void left_wheel_feedback_interrupt()
+{
+    left_wheel_counter += 1;
+}
+void right_wheel_feedback_interrupt()
+{
+    right_wheel_counter += 1;
+}
 
 // utility
 float mapfloat(float x, float in_min, float in_max, float out_min, float out_max)
@@ -65,27 +92,10 @@ void setup()
     pinMode(WHEEL_L_IN2_PIN, OUTPUT);
     pinMode(WHEEL_R_IN1_PIN, OUTPUT);
     pinMode(WHEEL_R_IN2_PIN, OUTPUT);
+    attachInterrupt(digitalPinToInterrupt(WHEEL_L_FEEDBACK_PIN), left_wheel_feedback_interrupt, RISING);
+    attachInterrupt(digitalPinToInterrupt(WHEEL_R_FEEDBACK_PIN), right_wheel_feedback_interrupt, RISING);
 
     FastLED.addLeds<NEOPIXEL, FRONT_STRIP_DATA_PIN>(front_strip_leds, FRONT_STRIP_NUM_LEDS);
-}
-
-void set_motor_speed(int IN1, int IN2, int speed)
-{
-    if (speed < 0)
-    {
-        analogWrite(IN1, 0);
-        analogWrite(IN2, abs(speed));
-    }
-    if (speed > 0)
-    {
-        analogWrite(IN1, abs(speed));
-        analogWrite(IN2, 0);
-    }
-    if (speed == 0)
-    {
-        analogWrite(IN1, 0);
-        analogWrite(IN2, 0);
-    }
 }
 
 void update_hardware()
@@ -120,6 +130,33 @@ void collect_telemetry()
     output["battery"]["raw_adc"] = raw_bat_adc;
     output["battery"]["volts"] = volts;
     output["battery"]["percent"] = percent;
+
+    // read bumpers
+    output["bumper"]["left"] = !digitalRead(BUMPER_L_PIN);
+    output["bumper"]["right"] = !digitalRead(BUMPER_R_PIN);
+
+    // read wheel rpm
+    output["wheels_speed"]["left"] = left_wheel_counter;
+    output["wheels_speed"]["right"] = right_wheel_counter;
+}
+
+void set_motor_speed(int IN1, int IN2, int speed)
+{
+    if (speed < 0)
+    {
+        analogWrite(IN1, 0);
+        analogWrite(IN2, abs(speed));
+    }
+    if (speed > 0)
+    {
+        analogWrite(IN1, abs(speed));
+        analogWrite(IN2, 0);
+    }
+    if (speed == 0)
+    {
+        analogWrite(IN1, 0);
+        analogWrite(IN2, 0);
+    }
 }
 
 void loop()
@@ -141,11 +178,13 @@ void loop()
         }
     }
 
-    if (millis() % 100 == 0)
+    if (millis() % 50 == 0)
     {
         collect_telemetry();
         serializeJson(output, Serial);
         Serial.println();
         output.remove("error");
+        left_wheel_counter = 0;
+        right_wheel_counter = 0;
     }
 }
