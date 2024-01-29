@@ -22,8 +22,7 @@
 
     ```bash
     cd chassis
-    make deps
-    make flash
+    make all
     ```
 
 - raspberry pi cockpit deploy:
