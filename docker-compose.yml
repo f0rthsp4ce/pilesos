@@ -23,7 +23,9 @@ services:
              --allow-origin=\* \
              --device=/dev/video0 \
              --device-timeout=5 \
-             --workers=4
+             --workers=4 \
+             --encoder=HW \
+             --format=MJPEG
     ports:
       - "8001:8001"
     devices:
