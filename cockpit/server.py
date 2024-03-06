@@ -48,8 +48,13 @@ async def websocket_endpoint(websocket: WebSocket):
             await asyncio.sleep(1)
 
     async def send_telemetry(ws=websocket):
+        # filter out repetitive telemetry
+        last_sent_telemetry: str = ""
         while True:
-            await websocket.send_text(chassis.get_telemetry())
+            t = chassis.get_telemetry()
+            if t != last_sent_telemetry:
+                await websocket.send_text(t)
+                last_sent_telemetry = t
             await asyncio.sleep(0.01)
 
     input_reset_killswitch_task = asyncio.create_task(input_reset_killswitch())
